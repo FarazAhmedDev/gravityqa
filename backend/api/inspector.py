@@ -2,11 +2,11 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from pydantic import BaseModel
-from services.mobile.appium_service import AppiumService
+from services.mobile.appium_service import get_appium_service
 import base64
 
 router = APIRouter(prefix="/api/inspector", tags=["inspector"])
-appium_service = AppiumService()
+appium_service = get_appium_service()
 
 class StartSessionRequest(BaseModel):
     device_id: str

@@ -279,3 +279,14 @@ class AppiumService:
             traceback.print_exc()
             return False
 
+
+# Singleton instance - shared across all modules
+_appium_service_instance = None
+
+def get_appium_service():
+    """Get the singleton AppiumService instance"""
+    global _appium_service_instance
+    if _appium_service_instance is None:
+        _appium_service_instance = AppiumService()
+    return _appium_service_instance
+

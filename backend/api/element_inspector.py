@@ -2,10 +2,10 @@
 from fastapi import APIRouter, HTTPException
 from typing import Dict, List, Optional
 import xml.etree.ElementTree as ET
-from api.inspector import appium_service
+from services.mobile.appium_service import get_appium_service
 
 router = APIRouter(prefix="/api/inspector", tags=["inspector"])
-
+appium_service = get_appium_service()  # Shared singleton instance
 # Global session storage (temporary - should use proper session management)
 _active_sessions = {}
 
