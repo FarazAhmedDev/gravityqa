@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\" \"npm run dev:electron\"",
-    "dev:frontend": "vite",
+    "dev:frontend": "vite --host",
     "dev:backend": "cd backend && source venv/bin/activate && python main.py",
     "dev:electron": "electron .",
     "build": "./scripts/build-mac.sh",

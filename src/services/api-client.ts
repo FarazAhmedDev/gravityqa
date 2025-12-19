@@ -1,7 +1,8 @@
 import axios from 'axios'
 import type { Project, App, Device, TestRun, TestStep } from '@/types'
 
-const API_BASE_URL = 'http://localhost:8000/api'
+// Dynamic API URL - works on localhost and network IP
+const API_BASE_URL = `http://${window.location.hostname}:8000/api`
 
 const client = axios.create({
     baseURL: API_BASE_URL,

@@ -74,8 +74,8 @@ class PlaybackEngine:
                     # CRITICAL: Wait for screen to stabilize after tap/swipe
                     action_type = step.get('action')
                     if action_type in ['tap', 'swipe']:
-                        print(f"[Playback] ⏸️  Waiting 3s for screen stabilization...")
-                        await asyncio.sleep(3.0)  # Wait for screen changes/animations
+                        print(f"[Playback] ⏸️  Waiting 1.25s for screen stabilization...")
+                        await asyncio.sleep(1.25)  # Wait for screen changes/animations
                 else:
                     results["failed_steps"] += 1
                     results["errors"].append({
