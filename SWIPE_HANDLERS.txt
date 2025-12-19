@@ -1,0 +1,112 @@
+// ADD THIS AFTER LINE 69 (after status state)
+
+    // Swipe recording state
+    const [isDragging, setIsDragging] = useState(false)
+    const [dragStart, setDragStart] = useState<{x: number, y: number} | null>(null)
+    const [dragEnd, setDragEnd] = useState<{x: number, y: number} | null>(null)
+
+    // Handle mouse down - start potential swipe
+    const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
+        if (!isRecording) return
+        
+        const rect = e.currentTarget.getBoundingClientRect()
+        const img = e.currentTarget as HTMLImageElement
+        const scaleX = img.naturalWidth / img.width
+        const scaleY = img.naturalHeight / img.height
+        const x = Math.round((e.clientX - rect.left) * scaleX)
+        const y = Math.round((e.clientY - rect.top) * scaleY)
+        
+        setIsDragging(true)
+        setDragStart({x, y})
+        setDragEnd(null)
+    }
+
+    // Handle mouse move - track drag
+    const handleMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+        if (!isDragging || !dragStart) return
+        
+        const rect = e.currentTarget.getBoundingClientRect()
+        const img = e.currentTarget as HTMLImageElement
+        const scaleX = img.naturalWidth / img.width
+        const scaleY = img.naturalHeight / img.height
+        const x = Math.round((e.clientX - rect.left) * scaleX)
+        const y = Math.round((e.clientY - rect.top) * scaleY)
+        
+        setDragEnd({x, y})
+    }
+
+    // Handle mouse up - complete tap or swipe
+    const handleMouseUp = async (e: React.MouseEvent<HTMLImageElement>) => {
+        if (!isRecording || !dragStart) return
+        
+        const rect = e.currentTarget.getBoundingClientRect()
+        const img = e.currentTarget as HTMLImageElement
+        const scaleX = img.naturalWidth / img.width
+        const scaleY = img.naturalHeight / img.height
+        const endX = Math.round((e.clientX - rect.left) * scaleX)
+        const endY = Math.round((e.clientY - rect.top) * scaleY)
+        
+        // Calculate distance
+        const distance = Math.sqrt(
+            Math.pow(endX - dragStart.x, 2) + Math.pow(endY - dragStart.y, 2)
+        )
+        
+        // If very small movement, treat as TAP
+        if (distance < 20) {
+            const action: RecordedAction = {
+                step: actions.length + 1,
+                action: 'tap',
+                x: dragStart.x,
+                y: dragStart.y,
+                description: `Tap at (${dragStart.x}, ${dragStart.y})`,
+                timestamp: Date.now()
+            }
+            
+            setActions([...actions, action])
+            setStatus(`🔴 Recording - ${actions.length + 1} actions (Tap)`)
+            
+            try {
+                await axios.post('http://localhost:8000/api/inspector/tap-coordinate', { 
+                    x: dragStart.x, 
+                    y: dragStart.y 
+                })
+            } catch (error) {
+                console.error('Tap failed:', error)
+            }
+        } 
+        // Otherwise, treat as SWIPE
+        else {
+            const action: any = {
+                step: actions.length + 1,
+                action: 'swipe',
+                start_x: dragStart.x,
+                start_y: dragStart.y,
+                end_x: endX,
+                end_y: endY,
+                duration: 500,
+                description: `Swipe from (${dragStart.x}, ${dragStart.y}) to (${endX}, ${endY})`,
+                timestamp: Date.now()
+            }
+            
+            setActions([...actions, action])
+            setStatus(`🔴 Recording - ${actions.length + 1} actions (Swipe ${distance.toFixed(0)}px)`)
+            
+            // Execute swipe on device
+            try {
+                await axios.post('http://localhost:8000/api/inspector/swipe', {
+                    start_x: dragStart.x,
+                    start_y: dragStart.y,
+                    end_x: endX,
+                    end_y: endY,
+                    duration: 500
+                })
+            } catch (error) {
+                console.error('Swipe failed:', error)
+            }
+        }
+        
+        // Reset drag state
+        setIsDragging(false)
+        setDragStart(null)
+        setDragEnd(null)
+    }

@@ -1,0 +1,69 @@
+# MODE SELECTOR UI - ADD THIS TO RECORDING SCREEN
+
+## Add this BEFORE the screenshot in recording view (around line 720):
+
+```typescript
+{/* Mode Selector */}
+<div style={{
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '16px',
+    justifyContent: 'center'
+}}>
+    <button
+        onClick={() => setRecordingMode('tap')}
+        style={{
+            padding: '10px 20px',
+            background: recordingMode === 'tap' ? '#238636' : '#21262d',
+            color: 'white',
+            border: recordingMode === 'tap' ? '2px solid #2ea043' : '2px solid #30363d',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: '14px'
+        }}
+    >
+        👆 Tap Mode
+    </button>
+    <button
+        onClick={() => setRecordingMode('swipe')}
+        style={{
+            padding: '10px 20px',
+            background: recordingMode === 'swipe' ? '#238636' : '#21262d',
+            color: 'white',
+            border: recordingMode === 'swipe' ? '2px solid #2ea043' : '2px solid #30363d',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: '14px'
+        }}
+    >
+        👉 Swipe Mode
+    </button>
+</div>
+
+<div style={{ 
+    fontSize: '14px', 
+    color: '#7d8590', 
+    marginBottom: '16px',
+    textAlign: 'center'
+}}>
+    {recordingMode === 'tap' ? '👆 Click to record taps' : '👉 Click & drag to record swipes'}
+</div>
+```
+
+## Update handleMouseUp to check mode:
+
+Replace the distance check with mode check:
+
+```typescript
+// In handleMouseUp function, change this:
+if (distance < 20) {
+    // TAP
+}
+
+// To this:
+if (recordingMode === 'tap' || distance < 20) {
+    // TAP (forced by mode or small movement)
+}
+```

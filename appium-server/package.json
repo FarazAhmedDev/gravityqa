@@ -1,0 +1,14 @@
+{
+    "name": "gravityqa-appium-server",
+    "version": "1.0.0",
+    "description": "Appium server for GravityQA",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "appium": "^2.4.1",
+        "appium-uiautomator2-driver": "^3.0.4",
+        "appium-xcuitest-driver": "^5.12.2"
+    }
+}

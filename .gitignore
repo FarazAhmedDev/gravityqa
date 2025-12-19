@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.vitest/
+
+# Electron
+out/
+release/
+
+# AI/ML
+vector_db/
+*.pkl
+*.model
+
+# Project specific
+gravityqa.db
+projects/
+screenshots/
+videos/
+reports/
+
+# Temporary
+*.tmp
+*.temp
+.cache/
