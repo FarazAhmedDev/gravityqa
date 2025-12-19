@@ -351,7 +351,7 @@ export default function AutomationWizard() {
 
         try {
             const res = await axios.get(`http://localhost:8000/api/inspector/element-at-position?x=${x}&y=${y}`)
-            
+
             if (res.data.found) {
                 setHoveredElement(res.data.element)
                 setShowElementPanel(true)
@@ -2232,8 +2232,8 @@ export default function AutomationWizard() {
             ))}
 
             <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
-                {/* Premium Step Indicator - Hidden on recording, save, and playback steps */}
-                {!['record', 'save', 'playback'].includes(currentStep) && (
+                {/* Premium Step Indicator - Hidden on launch, record, save, and playback steps */}
+                {!['launch', 'record', 'save', 'playback'].includes(currentStep) && (
                     <div style={{
                         padding: '32px 60px',
                         background: 'linear-gradient(135deg, rgba(22, 27, 34, 0.95), rgba(13, 17, 23, 0.95))',
