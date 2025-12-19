@@ -141,7 +141,7 @@ export default function AutomationWizard() {
         }
 
         refreshScreenshot()
-        const interval = setInterval(refreshScreenshot, 2000) // 2 sec refresh (slower to prevent crashes)
+        const interval = setInterval(refreshScreenshot, 500) // Fast refresh for real-time recording experience
         return () => clearInterval(interval)
     }, [sessionActive])
 
