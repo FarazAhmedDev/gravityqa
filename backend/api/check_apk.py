@@ -22,10 +22,25 @@ async def check_apk_on_device(
         content = await apk.read()
         f.write(content)
     
+    
     try:
+        print(f"[CHECK] Received file: {apk.filename}, Content-Type: {apk.content_type}")
+        
+        # Validate it's an APK
+        if not apk.filename.endswith('.apk'):
+            raise HTTPException(status_code=400, detail="File must be an APK (.apk extension)")
+        
         # Extract package name
         analyzer = APKAnalyzer()
+        print(f"[CHECK] Analyzing APK at {apk_path}...")
         apk_info = analyzer.extract_package_info(apk_path)
+        
+        if not apk_info.get("package_name"):
+            raise HTTPException(
+                status_code=500, 
+                detail="Could not extract package name from APK. Install androguard: pip install androguard"
+            )
+        
         package_name = apk_info["package_name"]
         
         print(f"[CHECK] Looking for {package_name} on device...")
@@ -78,5 +93,11 @@ async def check_apk_on_device(
             "apk_path": apk_path
         }
         
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Check failed: {str(e)}")
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"[CHECK] ❌ Error details:\n{error_details}")
+        raise HTTPException(status_code=500, detail=f"APK analysis failed: {str(e)}")
