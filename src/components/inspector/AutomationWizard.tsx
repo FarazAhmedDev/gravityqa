@@ -337,6 +337,63 @@ export default function AutomationWizard() {
         }
     }
 
+    // INSPECTOR MODE HANDLERS
+    const handleInspectorHover = async (e: React.MouseEvent<HTMLImageElement>) => {
+        if (recordingMode !== 'inspector') return
+
+        const rect = e.currentTarget.getBoundingClientRect()
+        const img = e.currentTarget as HTMLImageElement
+
+        const scaleX = img.naturalWidth / img.width
+        const scaleY = img.naturalHeight / img.height
+        const x = Math.round((e.clientX - rect.left) * scaleX)
+        const y = Math.round((e.clientY - rect.top) * scaleY)
+
+        try {
+            const res = await axios.get(`http://localhost:8000/api/inspector/element-at-position?x=${x}&y=${y}`)
+            
+            if (res.data.found) {
+                setHoveredElement(res.data.element)
+                setShowElementPanel(true)
+            } else {
+                setHoveredElement(null)
+                setShowElementPanel(false)
+            }
+        } catch (error) {
+            console.error('Element detection failed:', error)
+        }
+    }
+
+    const handleInspectorClick = async (e: React.MouseEvent<HTMLImageElement>) => {
+        if (recordingMode !== 'inspector' || !hoveredElement) return
+
+        const rect = e.currentTarget.getBoundingClientRect()
+        const img = e.currentTarget as HTMLImageElement
+
+        const scaleX = img.naturalWidth / img.width
+        const scaleY = img.naturalHeight / img.height
+        const x = Math.round((e.clientX - rect.left) * scaleX)
+        const y = Math.round((e.clientY - rect.top) * scaleY)
+
+        const action: RecordedAction = {
+            step: actions.length + 1,
+            action: 'tap',
+            x,
+            y,
+            element: hoveredElement,
+            description: `🔍 Tap ${hoveredElement.class?.split('.').pop()} "${hoveredElement.text || hoveredElement.resource_id || 'element'}"`,
+            timestamp: Date.now()
+        }
+
+        setActions([...actions, action])
+        setStatus(`🔍 Inspector - ${actions.length + 1} actions captured`)
+
+        try {
+            await axios.post('http://localhost:8000/api/inspector/tap-coordinate', { x, y })
+        } catch (error) {
+            console.error('Tap execution failed:', error)
+        }
+    }
 
     // SWIPE RECORDING HANDLERS
     const handleMouseDown = (e: React.MouseEvent<HTMLImageElement>) => {
@@ -1381,21 +1438,24 @@ export default function AutomationWizard() {
                                 <img
                                     src={screenshot}
                                     alt="Device Screen"
-                                    onMouseDown={handleMouseDown}
-                                    onMouseMove={handleMouseMove}
-                                    onMouseUp={handleMouseUp}
+                                    onMouseDown={recordingMode === 'inspector' ? undefined : handleMouseDown}
+                                    onMouseMove={recordingMode === 'inspector' ? handleInspectorHover : handleMouseMove}
+                                    onMouseUp={recordingMode === 'inspector' ? undefined : handleMouseUp}
+                                    onClick={recordingMode === 'inspector' ? handleInspectorClick : undefined}
                                     style={{
                                         maxHeight: 'calc(100vh - 230px)',
                                         maxWidth: '100%',
                                         width: 'auto',
                                         height: 'auto',
                                         borderRadius: '16px',
-                                        cursor: isRecording ? 'crosshair' : 'default',
+                                        cursor: recordingMode === 'inspector' ? 'pointer' : (isRecording ? 'crosshair' : 'default'),
                                         boxShadow: isRecording
                                             ? '0 0 30px rgba(220, 38, 38, 0.6)'
-                                            : '0 4px 12px rgba(0,0,0,0.3)',
+                                            : recordingMode === 'inspector'
+                                                ? '0 0 30px rgba(139, 92, 246, 0.6)'
+                                                : '0 4px 12px rgba(0,0,0,0.3)',
                                         transition: 'all 0.3s',
-                                        border: isRecording ? '2px solid #dc2626' : 'none',
+                                        border: isRecording ? '2px solid #dc2626' : (recordingMode === 'inspector' ? '2px solid #8b5cf6' : 'none'),
                                         objectFit: 'contain'
                                     }}
                                 />
