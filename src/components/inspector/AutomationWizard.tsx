@@ -821,18 +821,21 @@ export default function AutomationWizard() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        height: 'calc(100vh - 150px)',
-                        padding: '40px'
+                        minHeight: 'calc(100vh - 150px)',
+                        maxHeight: 'calc(100vh - 150px)',
+                        padding: '40px',
+                        overflowY: 'auto'
                     }}>
                         <div style={{
                             textAlign: 'center',
                             background: 'linear-gradient(135deg, #161b22 0%, #0d1117 100%)',
                             borderRadius: '24px',
-                            padding: '60px 80px',
+                            padding: '40px 60px',
                             border: '1px solid #30363d',
                             boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
                             maxWidth: '600px',
-                            width: '100%'
+                            width: '100%',
+                            margin: 'auto'
                         }}>
                             <div style={{
                                 fontSize: '96px',
