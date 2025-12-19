@@ -11,6 +11,36 @@ class AppiumService:
         self.port = settings.APPIUM_PORT
         self.server_process = None
         self.active_sessions = {}
+        # Auto-discover existing sessions on init
+        self._discover_sessions()
+    
+    def _discover_sessions(self):
+        """Discover and reconnect to existing Appium sessions"""
+        try:
+            import requests
+            response = requests.get(
+                f"http://{self.host}:{self.port}/sessions",
+                timeout=2
+            )
+            if response.status_code == 200:
+                data = response.json()
+                sessions = data.get("value", [])
+                
+                for session in sessions:
+                    session_id = session.get("id")
+                    capabilities = session.get("capabilities", {})
+                    
+                    if session_id:
+                        self.active_sessions[session_id] = capabilities
+                        print(f"[AppiumService] 🔄 Reconnected to existing session: {session_id}")
+                
+                if self.active_sessions:
+                    print(f"[AppiumService] ✅ Total active sessions: {len(self.active_sessions)}")
+                else:
+                    print("[AppiumService] ⚠️ No existing sessions found")
+                    
+        except Exception as e:
+            print(f"[AppiumService] Could not discover sessions: {e}")
     
     async def start_server(self) -> bool:
         """Start Appium server"""
@@ -53,7 +83,7 @@ class AppiumService:
         """Create Appium session - FIXED for real device launch"""
         capabilities = {
             "platformName": platform.capitalize(),
-            "appium:deviceName": device_id,  # Use deviceName with device ID
+            "appium:deviceName": device_id,
             "appium:automationName": "UiAutomator2",
             "appium:appPackage": app_package,
             "appium:appActivity": app_activity
@@ -75,7 +105,6 @@ class AppiumService:
                     data = response.json()
                     print(f"[DEBUG] Response data: {data}")
 
-                    # Extract session ID (handles both Appium v1 and v2 formats)
                     session_id = data.get("value", {}).get("sessionId") or data.get("sessionId")
 
                     print(f"[DEBUG] Extracted session_id: {session_id}")
@@ -117,18 +146,17 @@ class AppiumService:
             print(f"Error deleting session: {e}")
             return False
     
-    async def get_page_source(self, session_id: str) -> Optional[str]:
-        """Get page source (XML hierarchy)"""
+    def get_page_source(self, session_id: str) -> Optional[str]:
+        """Get page source (XML hierarchy) - SYNC version"""
         try:
-            import httpx
-            async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    f"http://{self.host}:{self.port}/session/{session_id}/source",
-                    timeout=10
-                )
-                
-                if response.status_code == 200:
-                    return response.json().get("value")
+            import requests
+            response = requests.get(
+                f"http://{self.host}:{self.port}/session/{session_id}/source",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                return response.json().get("value")
         except:
             pass
         
@@ -202,7 +230,6 @@ class AppiumService:
             print(f"[DEBUG] Tapping at ({x}, {y}) on session {session_id}")
             
             async with httpx.AsyncClient() as client:
-                # W3C Actions API
                 response = await client.post(
                     f"http://{self.host}:{self.port}/session/{session_id}/actions",
                     json={
@@ -243,7 +270,6 @@ class AppiumService:
             print(f"[DEBUG] Swiping from ({start_x},{start_y}) to ({end_x},{end_y}) on session {session_id}")
             
             async with httpx.AsyncClient() as client:
-                # W3C Actions API for swipe
                 response = await client.post(
                     f"http://{self.host}:{self.port}/session/{session_id}/actions",
                     json={
@@ -288,5 +314,5 @@ def get_appium_service():
     global _appium_service_instance
     if _appium_service_instance is None:
         _appium_service_instance = AppiumService()
+        print(f"[AppiumService] 🆕 Created new singleton instance")
     return _appium_service_instance
-
