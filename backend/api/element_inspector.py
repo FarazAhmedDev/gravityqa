@@ -94,16 +94,22 @@ def generate_xpath(elem: ET.Element) -> str:
 async def get_page_source():
     """Get UI hierarchy from active Appium session"""
     try:
-        from services.appium_service import appium_service
+        from services.mobile.appium_service import appium_service
         
-        # Get active session
-        session_id = appium_service.get_active_session_id()
-        if not session_id:
-            raise HTTPException(status_code=400, detail="No active session")
+        # Get latest active session
+        if not appium_service.active_sessions:
+            raise HTTPException(status_code=400, detail="No active Appium session. Please launch app first.")
         
-        # Get page source XML
-        driver = appium_service.get_driver(session_id)
-        page_source = driver.page_source
+        # Get the latest session ID
+        session_id = list(appium_service.active_sessions.keys())[-1]
+        
+        print(f"[Inspector] Getting page source for session: {session_id}")
+        
+        # Get page source XML using existing appium_service method
+        page_source = appium_service.get_page_source(session_id)
+        
+        if not page_source:
+            raise HTTPException(status_code=500, detail="Failed to get page source")
         
         print(f"[Inspector] Got page source ({len(page_source)} chars)")
         
@@ -125,22 +131,28 @@ async def get_page_source():
         raise
     except Exception as e:
         print(f"[Inspector] Error getting page source: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/element-at-position")
 async def get_element_at_position(x: int, y: int):
     """Find element at given coordinates"""
     try:
-        from services.appium_service import appium_service
+        from services.mobile.appium_service import appium_service
         
-        # Get active session
-        session_id = appium_service.get_active_session_id()
-        if not session_id:
-            raise HTTPException(status_code=400, detail="No active session")
+        # Get latest active session
+        if not appium_service.active_sessions:
+            raise HTTPException(status_code=400, detail="No active Appium session")
         
-        # Get page source
-        driver = appium_service.get_driver(session_id)
-        page_source = driver.page_source
+        # Get the latest session ID
+        session_id = list(appium_service.active_sessions.keys())[-1]
+        
+        # Get page source using existing method
+        page_source = appium_service.get_page_source(session_id)
+        
+        if not page_source:
+            raise HTTPException(status_code=500, detail="Failed to get page source")
         
         # Parse XML
         root = ET.fromstring(page_source)
@@ -164,6 +176,10 @@ async def get_element_at_position(x: int, y: int):
             "y": y
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"[Inspector] Error finding element: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
