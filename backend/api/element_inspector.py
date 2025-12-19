@@ -139,7 +139,6 @@ async def get_page_source():
 async def get_element_at_position(x: int, y: int):
     """Find element at given coordinates"""
     try:
-        from services.mobile.appium_service import appium_service
         
         # Get latest active session
         if not appium_service.active_sessions:
