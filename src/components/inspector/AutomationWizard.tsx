@@ -23,6 +23,8 @@ interface RecordedAction {
     x?: number
     y?: number
     text?: string
+    duration?: number  // For wait actions
+    element?: any  // For inspector mode - element properties
     description: string
     timestamp: number
 }
@@ -74,8 +76,13 @@ export default function AutomationWizard() {
 
     // Swipe recording state
     const [isDragging, setIsDragging] = useState(false)
-    const [recordingMode, setRecordingMode] = useState<'tap' | 'swipe'>('tap')
+    const [recordingMode, setRecordingMode] = useState<'tap' | 'swipe' | 'inspector'>('tap')
     const [dragStart, setDragStart] = useState<{ x: number, y: number } | null>(null)
+
+    // Inspector mode state
+    const [inspectorMode, setInspectorMode] = useState(false)
+    const [hoveredElement, setHoveredElement] = useState<any>(null)
+    const [showElementPanel, setShowElementPanel] = useState(false)
 
     // Mouse position for parallax
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
@@ -1557,6 +1564,31 @@ export default function AutomationWizard() {
                                     }}
                                 >
                                     👉 Swipe Mode
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setRecordingMode('inspector')
+                                        setInspectorMode(!inspectorMode)
+                                    }}
+                                    style={{
+                                        flex: 1,
+                                        padding: '14px 20px',
+                                        background: recordingMode === 'inspector'
+                                            ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
+                                            : 'linear-gradient(135deg, #21262d, #161b22)',
+                                        color: 'white',
+                                        border: recordingMode === 'inspector' ? '2px solid #8b5cf6' : '2px solid #30363d',
+                                        borderRadius: '12px',
+                                        cursor: 'pointer',
+                                        fontWeight: 600,
+                                        fontSize: '15px',
+                                        boxShadow: recordingMode === 'inspector'
+                                            ? '0 0 20px rgba(139, 92, 246, 0.4)'
+                                            : 'none',
+                                        transition: 'all 0.3s'
+                                    }}
+                                >
+                                    🔍 Inspector
                                 </button>
                             </div>
 
