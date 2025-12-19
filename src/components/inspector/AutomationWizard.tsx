@@ -338,14 +338,13 @@ export default function AutomationWizard() {
     }
 
     // INSPECTOR MODE HANDLERS
-    let lastHoverTime = 0
     const handleInspectorHover = async (e: React.MouseEvent<HTMLImageElement>) => {
         if (recordingMode !== 'inspector') return
 
-        // Throttle API calls - only call every 300ms
+        // Throttle API calls - only call every 100ms for better responsiveness
         const now = Date.now()
-        if (now - lastHoverTime < 300) return
-        lastHoverTime = now
+        if (now - (window as any)._lastInspectorHoverTime < 100) return
+        (window as any)._lastInspectorHoverTime = now
 
         const rect = e.currentTarget.getBoundingClientRect()
         const img = e.currentTarget as HTMLImageElement
