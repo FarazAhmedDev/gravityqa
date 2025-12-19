@@ -1,9 +1,22 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
+interface ModalState {
+    show: boolean
+    type: 'success' | 'error'
+    title: string
+    message: string
+}
+
 export default function Header() {
     const [appiumRunning, setAppiumRunning] = useState(false)
     const [isStarting, setIsStarting] = useState(false)
+    const [modal, setModal] = useState<ModalState>({
+        show: false,
+        type: 'success',
+        title: '',
+        message: ''
+    })
 
     useEffect(() => {
         checkAppiumStatus()
@@ -20,14 +33,22 @@ export default function Header() {
         }
     }
 
+    const showModal = (type: 'success' | 'error', title: string, message: string) => {
+        setModal({ show: true, type, title, message })
+    }
+
+    const closeModal = () => {
+        setModal({ ...modal, show: false })
+    }
+
     const handleStartAppium = async () => {
         setIsStarting(true)
         try {
             await axios.post('http://localhost:8000/api/appium/start')
             setTimeout(checkAppiumStatus, 2000)
-            alert('✅ Appium started!')
+            showModal('success', 'Success', 'Appium started successfully!')
         } catch (error: any) {
-            alert('❌ Failed to start Appium: ' + (error.response?.data?.detail || error.message))
+            showModal('error', 'Failed to start Appium', error.response?.data?.detail || error.message)
         } finally {
             setIsStarting(false)
         }
@@ -37,198 +58,347 @@ export default function Header() {
         try {
             await axios.post('http://localhost:8000/api/appium/stop')
             checkAppiumStatus()
-            alert('✅ Appium stopped')
+            showModal('success', 'Success', 'Appium stopped successfully')
         } catch (error: any) {
-            alert('❌ Failed to stop Appium: ' + (error.response?.data?.detail || error.message))
+            showModal('error', 'Failed to stop Appium', error.response?.data?.detail || error.message)
         }
     }
 
     return (
-        <div style={{
-            padding: '16px 32px',
-            background: 'linear-gradient(135deg, rgba(22, 27, 34, 0.95), rgba(13, 17, 23, 0.95))',
-            backdropFilter: 'blur(20px)',
-            borderBottom: '1px solid rgba(48, 54, 61, 0.5)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
-            position: 'sticky',
-            top: 0,
-            zIndex: 100
-        }}>
-            {/* App Title */}
-            <h1 style={{
-                fontSize: '28px',
-                fontWeight: 900,
-                margin: 0,
-                background: 'linear-gradient(135deg, #ffffff 0%, #58a6ff 50%, #a78bfa 100%)',
-                backgroundSize: '200% 100%',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                letterSpacing: '-1px',
-                animation: 'gradientFlow 8s ease infinite, textFloat 4s ease-in-out infinite',
-                textShadow: '0 0 40px rgba(88, 166, 255, 0.3)'
+        <>
+            <div style={{
+                padding: '16px 32px',
+                background: 'linear-gradient(135deg, rgba(22, 27, 34, 0.95), rgba(13, 17, 23, 0.95))',
+                backdropFilter: 'blur(20px)',
+                borderBottom: '1px solid rgba(48, 54, 61, 0.5)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+                position: 'sticky',
+                top: 0,
+                zIndex: 100
             }}>
-                GravityQA
-            </h1>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                {/* Appium Status Badge */}
-                <div style={{
-                    padding: '10px 18px',
-                    background: appiumRunning
-                        ? 'linear-gradient(135deg, rgba(63, 185, 80, 0.15), rgba(46, 160, 67, 0.12))'
-                        : 'linear-gradient(135deg, rgba(248, 81, 73, 0.15), rgba(218, 54, 51, 0.12))',
-                    borderRadius: '12px',
-                    border: appiumRunning
-                        ? '1.5px solid rgba(63, 185, 80, 0.3)'
-                        : '1.5px solid rgba(248, 81, 73, 0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    boxShadow: appiumRunning
-                        ? '0 0 20px rgba(63, 185, 80, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                        : '0 0 20px rgba(248, 81, 73, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                {/* App Title */}
+                <h1 style={{
+                    fontSize: '28px',
+                    fontWeight: 900,
+                    margin: 0,
+                    background: 'linear-gradient(135deg, #ffffff 0%, #58a6ff 50%, #a78bfa 100%)',
+                    backgroundSize: '200% 100%',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    letterSpacing: '-1px',
+                    animation: 'gradientFlow 8s ease infinite, textFloat 4s ease-in-out infinite',
+                    textShadow: '0 0 40px rgba(88, 166, 255, 0.3)'
                 }}>
+                    GravityQA
+                </h1>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    {/* Appium Status Badge */}
                     <div style={{
-                        width: '10px',
-                        height: '10px',
-                        borderRadius: '50%',
+                        padding: '10px 18px',
                         background: appiumRunning
-                            ? 'radial-gradient(circle, #3fb950, #238636)'
-                            : 'radial-gradient(circle, #f85149, #da3633)',
+                            ? 'linear-gradient(135deg, rgba(63, 185, 80, 0.15), rgba(46, 160, 67, 0.12))'
+                            : 'linear-gradient(135deg, rgba(248, 81, 73, 0.15), rgba(218, 54, 51, 0.12))',
+                        borderRadius: '12px',
+                        border: appiumRunning
+                            ? '1.5px solid rgba(63, 185, 80, 0.3)'
+                            : '1.5px solid rgba(248, 81, 73, 0.3)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
                         boxShadow: appiumRunning
-                            ? '0 0 16px rgba(63, 185, 80, 1), 0 0 30px rgba(63, 185, 80, 0.5)'
-                            : '0 0 16px rgba(248, 81, 73, 1), 0 0 30px rgba(248, 81, 73, 0.5)',
-                        animation: appiumRunning ? 'statusPulse 2.5s ease-in-out infinite' : 'none'
-                    }}></div>
-                    <span style={{
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        color: appiumRunning ? '#3fb950' : '#f85149',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px'
+                            ? '0 0 20px rgba(63, 185, 80, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                            : '0 0 20px rgba(248, 81, 73, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
                     }}>
-                        Appium
-                    </span>
+                        <div style={{
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '50%',
+                            background: appiumRunning
+                                ? 'radial-gradient(circle, #3fb950, #238636)'
+                                : 'radial-gradient(circle, #f85149, #da3633)',
+                            boxShadow: appiumRunning
+                                ? '0 0 16px rgba(63, 185, 80, 1), 0 0 30px rgba(63, 185, 80, 0.5)'
+                                : '0 0 16px rgba(248, 81, 73, 1), 0 0 30px rgba(248, 81, 73, 0.5)',
+                            animation: appiumRunning ? 'statusPulse 2.5s ease-in-out infinite' : 'none'
+                        }}></div>
+                        <span style={{
+                            fontSize: '14px',
+                            fontWeight: 700,
+                            color: appiumRunning ? '#3fb950' : '#f85149',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                        }}>
+                            Appium
+                        </span>
+                    </div>
+
+                    {/* Control Button */}
+                    {appiumRunning ? (
+                        <button
+                            onClick={handleStopAppium}
+                            style={{
+                                padding: '10px 20px',
+                                fontSize: '14px',
+                                fontWeight: 700,
+                                background: 'linear-gradient(135deg, #f85149 0%, #da3633 50%, #f85149 100%)',
+                                backgroundSize: '200% 100%',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s',
+                                boxShadow: '0 0 30px rgba(248, 81, 73, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
+                                e.currentTarget.style.boxShadow = '0 0 40px rgba(248, 81, 73, 0.6), 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25)'
+                                e.currentTarget.style.backgroundPosition = '100% 0'
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                                e.currentTarget.style.boxShadow = '0 0 30px rgba(248, 81, 73, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                e.currentTarget.style.backgroundPosition = '0% 0'
+                            }}
+                        >
+                            ⏹️ Stop Appium
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleStartAppium}
+                            disabled={isStarting}
+                            style={{
+                                padding: '10px 20px',
+                                fontSize: '14px',
+                                fontWeight: 700,
+                                background: isStarting
+                                    ? 'rgba(48, 54, 61, 0.5)'
+                                    : 'linear-gradient(135deg, #58a6ff 0%, #1f6feb 50%, #58a6ff 100%)',
+                                backgroundSize: '200% 100%',
+                                color: isStarting ? '#6e7681' : 'white',
+                                border: 'none',
+                                borderRadius: '10px',
+                                cursor: isStarting ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.3s',
+                                boxShadow: isStarting
+                                    ? 'none'
+                                    : '0 0 30px rgba(88, 166, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                                animation: isStarting ? 'none' : 'buttonPulse 2.5s ease-in-out infinite'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (!isStarting) {
+                                    e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
+                                    e.currentTarget.style.boxShadow = '0 0 40px rgba(88, 166, 255, 0.6), 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25)'
+                                    e.currentTarget.style.backgroundPosition = '100% 0'
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (!isStarting) {
+                                    e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                                    e.currentTarget.style.boxShadow = '0 0 30px rgba(88, 166, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                    e.currentTarget.style.backgroundPosition = '0% 0'
+                                }
+                            }}
+                        >
+                            {isStarting ? (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ animation: 'spin 1s linear infinite' }}>⏳</span>
+                                    Starting...
+                                </span>
+                            ) : (
+                                '▶️ Start Appium'
+                            )}
+                        </button>
+                    )}
                 </div>
 
-                {/* Control Button */}
-                {appiumRunning ? (
-                    <button
-                        onClick={handleStopAppium}
-                        style={{
-                            padding: '10px 20px',
-                            fontSize: '14px',
-                            fontWeight: 700,
-                            background: 'linear-gradient(135deg, #f85149 0%, #da3633 50%, #f85149 100%)',
-                            backgroundSize: '200% 100%',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '10px',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s',
-                            boxShadow: '0 0 30px rgba(248, 81, 73, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
-                            e.currentTarget.style.boxShadow = '0 0 40px rgba(248, 81, 73, 0.6), 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25)'
-                            e.currentTarget.style.backgroundPosition = '100% 0'
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                            e.currentTarget.style.boxShadow = '0 0 30px rgba(248, 81, 73, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                            e.currentTarget.style.backgroundPosition = '0% 0'
-                        }}
-                    >
-                        ⏹️ Stop Appium
-                    </button>
-                ) : (
-                    <button
-                        onClick={handleStartAppium}
-                        disabled={isStarting}
-                        style={{
-                            padding: '10px 20px',
-                            fontSize: '14px',
-                            fontWeight: 700,
-                            background: isStarting
-                                ? 'rgba(48, 54, 61, 0.5)'
-                                : 'linear-gradient(135deg, #58a6ff 0%, #1f6feb 50%, #58a6ff 100%)',
-                            backgroundSize: '200% 100%',
-                            color: isStarting ? '#6e7681' : 'white',
-                            border: 'none',
-                            borderRadius: '10px',
-                            cursor: isStarting ? 'not-allowed' : 'pointer',
-                            transition: 'all 0.3s',
-                            boxShadow: isStarting
-                                ? 'none'
-                                : '0 0 30px rgba(88, 166, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                            animation: isStarting ? 'none' : 'buttonPulse 2.5s ease-in-out infinite'
-                        }}
-                        onMouseEnter={(e) => {
-                            if (!isStarting) {
-                                e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
-                                e.currentTarget.style.boxShadow = '0 0 40px rgba(88, 166, 255, 0.6), 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25)'
-                                e.currentTarget.style.backgroundPosition = '100% 0'
-                            }
-                        }}
-                        onMouseLeave={(e) => {
-                            if (!isStarting) {
-                                e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                                e.currentTarget.style.boxShadow = '0 0 30px rgba(88, 166, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                                e.currentTarget.style.backgroundPosition = '0% 0'
-                            }
-                        }}
-                    >
-                        {isStarting ? (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ animation: 'spin 1s linear infinite' }}>⏳</span>
-                                Starting...
-                            </span>
-                        ) : (
-                            '▶️ Start Appium'
-                        )}
-                    </button>
-                )}
+                {/* CSS Animations */}
+                <style>{`
+                    @keyframes gradientFlow {
+                        0% { background-position: 0% 50%; }
+                        50% { background-position: 100% 50%; }
+                        100% { background-position: 0% 50%; }
+                    }
+                    @keyframes textFloat {
+                        0%, 100% { transform: translateY(0px); }
+                        50% { transform: translateY(-3px); }
+                    }
+                    @keyframes statusPulse {
+                        0%, 100% { 
+                            opacity: 1; 
+                            transform: scale(1);
+                            box-shadow: 0 0 16px rgba(63, 185, 80, 1), 0 0 30px rgba(63, 185, 80, 0.5);
+                        }
+                        50% { 
+                            opacity: 0.7; 
+                            transform: scale(0.9);
+                            box-shadow: 0 0 10px rgba(63, 185, 80, 0.8), 0 0 20px rgba(63, 185, 80, 0.3);
+                        }
+                    }
+                    @keyframes buttonPulse {
+                        0%, 100% {
+                            box-shadow: 0 0 30px rgba(88, 166, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+                        }
+                        50% {
+                            box-shadow: 0 0 45px rgba(88, 166, 255, 0.6), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+                        }
+                    }
+                    @keyframes spin {
+                        from { transform: rotate(0deg); }
+                        to { transform: rotate(360deg); }
+                    }
+                `}</style>
             </div>
 
-            {/* CSS Animations */}
-            <style>{`
-                @keyframes gradientFlow {
-                    0% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                    100% { background-position: 0% 50%; }
-                }
-                @keyframes textFloat {
-                    0%, 100% { transform: translateY(0px); }
-                    50% { transform: translateY(-3px); }
-                }
-                @keyframes statusPulse {
-                    0%, 100% { 
-                        opacity: 1; 
-                        transform: scale(1);
-                        box-shadow: 0 0 16px rgba(63, 185, 80, 1), 0 0 30px rgba(63, 185, 80, 0.5);
-                    }
-                    50% { 
-                        opacity: 0.7; 
-                        transform: scale(0.9);
-                        box-shadow: 0 0 10px rgba(63, 185, 80, 0.8), 0 0 20px rgba(63, 185, 80, 0.3);
-                    }
-                }
-                @keyframes buttonPulse {
-                    0%, 100% {
-                        box-shadow: 0 0 30px rgba(88, 166, 255, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-                    }
-                    50% {
-                        box-shadow: 0 0 45px rgba(88, 166, 255, 0.6), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-                    }
-                }
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-            `}</style>
-        </div>
+            {/* Premium Modal Dialog */}
+            {modal.show && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.75)',
+                    backdropFilter: 'blur(8px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 9999,
+                    animation: 'fadeIn 0.2s ease-out'
+                }}>
+                    <div style={{
+                        width: '90%',
+                        maxWidth: '500px',
+                        background: 'linear-gradient(135deg, rgba(22, 27, 34, 0.98), rgba(13, 17, 23, 0.98))',
+                        backdropFilter: 'blur(30px)',
+                        borderRadius: '24px',
+                        border: modal.type === 'error'
+                            ? '2px solid rgba(248, 81, 73, 0.5)'
+                            : '2px solid rgba(63, 185, 80, 0.5)',
+                        boxShadow: modal.type === 'error'
+                            ? '0 0 60px rgba(248, 81, 73, 0.4), 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+                            : '0 0 60px rgba(63, 185, 80, 0.4), 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                        padding: '40px',
+                        textAlign: 'center',
+                        animation: 'modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                    }}>
+                        {/* Icon */}
+                        <div style={{
+                            width: '80px',
+                            height: '80px',
+                            margin: '0 auto 24px',
+                            background: modal.type === 'error'
+                                ? 'linear-gradient(135deg, rgba(248, 81, 73, 0.2), rgba(218, 54, 51, 0.15))'
+                                : 'linear-gradient(135deg, rgba(63, 185, 80, 0.2), rgba(46, 160, 67, 0.15))',
+                            borderRadius: '50%',
+                            border: modal.type === 'error'
+                                ? '2px solid rgba(248, 81, 73, 0.4)'
+                                : '2px solid rgba(63, 185, 80, 0.4)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '40px',
+                            boxShadow: modal.type === 'error'
+                                ? '0 0 40px rgba(248, 81, 73, 0.3)'
+                                : '0 0 40px rgba(63, 185, 80, 0.3)',
+                            animation: 'iconBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s'
+                        }}>
+                            {modal.type === 'error' ? '❌' : '✅'}
+                        </div>
+
+                        {/* Title */}
+                        <h2 style={{
+                            fontSize: '24px',
+                            fontWeight: 800,
+                            marginBottom: '16px',
+                            background: modal.type === 'error'
+                                ? 'linear-gradient(135deg, #f85149, #da3633)'
+                                : 'linear-gradient(135deg, #3fb950, #238636)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            letterSpacing: '-0.5px'
+                        }}>
+                            {modal.title}
+                        </h2>
+
+                        {/* Message */}
+                        <p style={{
+                            fontSize: '15px',
+                            color: '#c9d1d9',
+                            lineHeight: '1.6',
+                            marginBottom: '32px',
+                            fontWeight: 500
+                        }}>
+                            {modal.message}
+                        </p>
+
+                        {/* OK Button */}
+                        <button
+                            onClick={closeModal}
+                            style={{
+                                padding: '14px 40px',
+                                fontSize: '16px',
+                                fontWeight: 700,
+                                background: modal.type === 'error'
+                                    ? 'linear-gradient(135deg, #f85149 0%, #da3633 50%, #f85149 100%)'
+                                    : 'linear-gradient(135deg, #3fb950 0%, #238636 50%, #3fb950 100%)',
+                                backgroundSize: '200% 100%',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s',
+                                boxShadow: modal.type === 'error'
+                                    ? '0 0 30px rgba(248, 81, 73, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                    : '0 0 30px rgba(63, 185, 80, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                                width: '100%'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)'
+                                e.currentTarget.style.boxShadow = modal.type === 'error'
+                                    ? '0 0 40px rgba(248, 81, 73, 0.7), 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25)'
+                                    : '0 0 40px rgba(63, 185, 80, 0.7), 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25)'
+                                e.currentTarget.style.backgroundPosition = '100% 0'
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                                e.currentTarget.style.boxShadow = modal.type === 'error'
+                                    ? '0 0 30px rgba(248, 81, 73, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                    : '0 0 30px rgba(63, 185, 80, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                e.currentTarget.style.backgroundPosition = '0% 0'
+                            }}
+                        >
+                            OK
+                        </button>
+                    </div>
+
+                    {/* Modal Animations */}
+                    <style>{`
+                        @keyframes fadeIn {
+                            from { opacity: 0; }
+                            to { opacity: 1; }
+                        }
+                        @keyframes modalSlideIn {
+                            from { 
+                                opacity: 0;
+                                transform: translateY(-30px) scale(0.9);
+                            }
+                            to {
+                                opacity: 1;
+                                transform: translateY(0) scale(1);
+                            }
+                        }
+                        @keyframes iconBounce {
+                            0% { transform: scale(0); }
+                            50% { transform: scale(1.1); }
+                            100% { transform: scale(1); }
+                        }
+                    `}</style>
+                </div>
+            )}
+        </>
     )
 }
