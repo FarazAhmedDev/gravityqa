@@ -58,7 +58,7 @@ export default function Header() {
         try {
             await axios.post('http://localhost:8000/api/appium/stop')
             checkAppiumStatus()
-            showModal('success', 'Success', 'Appium stopped successfully')
+            showModal('error', 'Appium Stopped', 'Appium server has been stopped')
         } catch (error: any) {
             showModal('error', 'Failed to stop Appium', error.response?.data?.detail || error.message)
         }
