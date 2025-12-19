@@ -80,6 +80,22 @@ export default function AutomationWizard() {
     // Mouse position for parallax
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 
+    // Modal state for errors
+    const [modalState, setModalState] = useState<{
+        show: boolean
+        type: 'error' | 'success'
+        title: string
+        message: string
+    }>({ show: false, type: 'error', title: '', message: '' })
+
+    const showModal = (type: 'error' | 'success', title: string, message: string) => {
+        setModalState({ show: true, type, title, message })
+    }
+
+    const closeModal = () => {
+        setModalState({ ...modalState, show: false })
+    }
+
     // Mouse tracking for parallax
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => setMousePos({ x: e.clientX, y: e.clientY })
@@ -200,7 +216,7 @@ export default function AutomationWizard() {
             console.error('Error message:', error.message)
             const errorMsg = error.response?.data?.detail || error.message || 'Unknown error'
             setStatus('❌ APK analysis failed: ' + errorMsg)
-            alert(`APK Upload Failed:\n\n${errorMsg}\n\nCheck console for details.`)
+            showModal('error', 'APK Upload Failed', `There was an error parsing the APK file.\n\n${errorMsg}\n\nCheck console for details.`)
         } finally {
             setIsUploading(false)
             setUploadProgress(0)
@@ -2275,6 +2291,150 @@ export default function AutomationWizard() {
                     {renderStep()}
                 </div>
             </div>
+
+            {/* Premium Modal Dialog */}
+            {modalState.show && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.75)',
+                    backdropFilter: 'blur(8px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 9999,
+                    animation: 'fadeIn 0.2s ease-out'
+                }}>
+                    <div style={{
+                        width: '90%',
+                        maxWidth: '500px',
+                        background: 'linear-gradient(135deg, rgba(22, 27, 34, 0.98), rgba(13, 17, 23, 0.98))',
+                        backdropFilter: 'blur(30px)',
+                        borderRadius: '24px',
+                        border: modalState.type === 'error'
+                            ? '2px solid rgba(248, 81, 73, 0.5)'
+                            : '2px solid rgba(63, 185, 80, 0.5)',
+                        boxShadow: modalState.type === 'error'
+                            ? '0 0 60px rgba(248, 81, 73, 0.4), 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+                            : '0 0 60px rgba(63, 185, 80, 0.4), 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                        padding: '40px',
+                        textAlign: 'center',
+                        animation: 'modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                    }}>
+                        {/* Icon */}
+                        <div style={{
+                            width: '80px',
+                            height: '80px',
+                            margin: '0 auto 24px',
+                            background: modalState.type === 'error'
+                                ? 'linear-gradient(135deg, rgba(248, 81, 73, 0.2), rgba(218, 54, 51, 0.15))'
+                                : 'linear-gradient(135deg, rgba(63, 185, 80, 0.2), rgba(46, 160, 67, 0.15))',
+                            borderRadius: '50%',
+                            border: modalState.type === 'error'
+                                ? '2px solid rgba(248, 81, 73, 0.4)'
+                                : '2px solid rgba(63, 185, 80, 0.4)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '40px',
+                            boxShadow: modalState.type === 'error'
+                                ? '0 0 40px rgba(248, 81, 73, 0.3)'
+                                : '0 0 40px rgba(63, 185, 80, 0.3)',
+                            animation: 'iconBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s'
+                        }}>
+                            {modalState.type === 'error' ? '❌' : '✅'}
+                        </div>
+
+                        {/* Title */}
+                        <h2 style={{
+                            fontSize: '24px',
+                            fontWeight: 800,
+                            marginBottom: '16px',
+                            background: modalState.type === 'error'
+                                ? 'linear-gradient(135deg, #f85149, #da3633)'
+                                : 'linear-gradient(135deg, #3fb950, #238636)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            letterSpacing: '-0.5px'
+                        }}>
+                            {modalState.title}
+                        </h2>
+
+                        {/* Message */}
+                        <p style={{
+                            fontSize: '15px',
+                            color: '#c9d1d9',
+                            lineHeight: '1.6',
+                            marginBottom: '32px',
+                            fontWeight: 500,
+                            whiteSpace: 'pre-line'
+                        }}>
+                            {modalState.message}
+                        </p>
+
+                        {/* OK Button */}
+                        <button
+                            onClick={closeModal}
+                            style={{
+                                padding: '14px 40px',
+                                fontSize: '16px',
+                                fontWeight: 700,
+                                background: modalState.type === 'error'
+                                    ? 'linear-gradient(135deg, #f85149 0%, #da3633 50%, #f85149 100%)'
+                                    : 'linear-gradient(135deg, #3fb950 0%, #238636 50%, #3fb950 100%)',
+                                backgroundSize: '200% 100%',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s',
+                                boxShadow: modalState.type === 'error'
+                                    ? '0 0 30px rgba(248, 81, 73, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                    : '0 0 30px rgba(63, 185, 80, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                                width: '100%'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)'
+                                e.currentTarget.style.boxShadow = modalState.type === 'error'
+                                    ? '0 0 40px rgba(248, 81, 73, 0.7), 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25)'
+                                    : '0 0 40px rgba(63, 185, 80, 0.7), 0 8px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25)'
+                                e.currentTarget.style.backgroundPosition = '100% 0'
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                                e.currentTarget.style.boxShadow = modalState.type === 'error'
+                                    ? '0 0 30px rgba(248, 81, 73, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                    : '0 0 30px rgba(63, 185, 80, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                e.currentTarget.style.backgroundPosition = '0% 0'
+                            }}
+                        >
+                            OK
+                        </button>
+                    </div>
+
+                    {/* Modal Animations */}
+                    <style>{`
+                        @keyframes modalSlideIn {
+                            from { 
+                                opacity: 0;
+                                transform: translateY(-30px) scale(0.9);
+                            }
+                            to {
+                                opacity: 1;
+                                transform: translateY(0) scale(1);
+                            }
+                        }
+                        @keyframes iconBounce {
+                            0% { transform: scale(0); }
+                            50% { transform: scale(1.1); }
+                            100% { transform: scale(1); }
+                        }
+                    `}</style>
+                </div>
+            )}
         </div>
     )
 }
