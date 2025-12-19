@@ -338,8 +338,14 @@ export default function AutomationWizard() {
     }
 
     // INSPECTOR MODE HANDLERS
+    let lastHoverTime = 0
     const handleInspectorHover = async (e: React.MouseEvent<HTMLImageElement>) => {
         if (recordingMode !== 'inspector') return
+
+        // Throttle API calls - only call every 300ms
+        const now = Date.now()
+        if (now - lastHoverTime < 300) return
+        lastHoverTime = now
 
         const rect = e.currentTarget.getBoundingClientRect()
         const img = e.currentTarget as HTMLImageElement
@@ -349,18 +355,24 @@ export default function AutomationWizard() {
         const x = Math.round((e.clientX - rect.left) * scaleX)
         const y = Math.round((e.clientY - rect.top) * scaleY)
 
+        console.log('[Inspector] Hover at:', x, y)
+
         try {
             const res = await axios.get(`http://localhost:8000/api/inspector/element-at-position?x=${x}&y=${y}`)
+
+            console.log('[Inspector] API response:', res.data)
 
             if (res.data.found) {
                 setHoveredElement(res.data.element)
                 setShowElementPanel(true)
+                console.log('[Inspector] Element found:', res.data.element.class)
             } else {
                 setHoveredElement(null)
                 setShowElementPanel(false)
+                console.log('[Inspector] No element at position')
             }
         } catch (error) {
-            console.error('Element detection failed:', error)
+            console.error('[Inspector] Element detection failed:', error)
         }
     }
 
