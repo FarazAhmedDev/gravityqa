@@ -1560,6 +1560,67 @@ export default function AutomationWizard() {
                                 </button>
                             </div>
 
+                            {/* Wait Button - Insert Delay */}
+                            <div style={{
+                                marginBottom: '20px',
+                                padding: '16px',
+                                background: '#0d1117',
+                                borderRadius: '12px',
+                                border: '1px solid #30363d'
+                            }}>
+                                <div style={{
+                                    fontSize: '13px',
+                                    color: '#7d8590',
+                                    marginBottom: '10px',
+                                    fontWeight: 600
+                                }}>
+                                    ⏱️ Insert Wait
+                                </div>
+                                <div style={{
+                                    display: 'flex',
+                                    gap: '8px'
+                                }}>
+                                    {[1, 2, 3, 5].map(seconds => (
+                                        <button
+                                            key={seconds}
+                                            onClick={() => {
+                                                const waitAction: RecordedAction = {
+                                                    step: actions.length + 1,
+                                                    action: 'wait',
+                                                    duration: seconds * 1000,  // Convert to ms
+                                                    description: `⏱️ Wait ${seconds}s`,
+                                                    timestamp: Date.now()
+                                                }
+                                                setActions([...actions, waitAction])
+                                            }}
+                                            style={{
+                                                flex: 1,
+                                                padding: '10px',
+                                                background: 'linear-gradient(135deg, #1f6feb, #1158c7)',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                fontWeight: 600,
+                                                fontSize: '13px',
+                                                boxShadow: '0 2px 8px rgba(31, 111, 235, 0.3)',
+                                                transition: 'all 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.transform = 'translateY(-2px)'
+                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(31, 111, 235, 0.5)'
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.transform = 'translateY(0)'
+                                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(31, 111, 235, 0.3)'
+                                            }}
+                                        >
+                                            {seconds}s
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             {/* Hint Text */}
                             <div style={{
                                 fontSize: '14px',
