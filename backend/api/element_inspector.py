@@ -2,10 +2,9 @@
 from fastapi import APIRouter, HTTPException
 from typing import Dict, List, Optional
 import xml.etree.ElementTree as ET
-from services.mobile.appium_service import AppiumService
+from api.inspector import appium_service
 
 router = APIRouter(prefix="/api/inspector", tags=["inspector"])
-appium_service = AppiumService()  # Module-level instance
 
 # Global session storage (temporary - should use proper session management)
 _active_sessions = {}
