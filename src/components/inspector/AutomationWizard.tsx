@@ -1444,7 +1444,8 @@ export default function AutomationWizard() {
                             boxShadow: isRecording
                                 ? '0 0 40px rgba(220, 38, 38, 0.5), 0 8px 32px rgba(0,0,0,0.4)'
                                 : '0 8px 32px rgba(0,0,0,0.4)',
-                            transition: 'all 0.3s'
+                            transition: 'all 0.3s',
+                            position: 'relative'  // For overlay positioning
                         }}>
                             {screenshot && (
                                 <img
@@ -1471,6 +1472,40 @@ export default function AutomationWizard() {
                                         objectFit: 'contain'
                                     }}
                                 />
+                            )}
+
+                            {/* Inspector Element Info - Shows detected element */}
+                            {recordingMode === 'inspector' && hoveredElement && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '30px',
+                                    right: '30px',
+                                    padding: '12px 20px',
+                                    background: 'rgba(139, 92, 246, 0.95)',
+                                    color: 'white',
+                                    borderRadius: '12px',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    boxShadow: '0 4px 20px rgba(139, 92, 246, 0.6)',
+                                    zIndex: 1000,
+                                    maxWidth: '300px',
+                                    backdropFilter: 'blur(10px)'
+                                }}>
+                                    <div style={{ marginBottom: '4px', fontSize: '11px', opacity: 0.8 }}>DETECTED ELEMENT:</div>
+                                    <div style={{ fontSize: '14px', fontWeight: 700 }}>
+                                        {hoveredElement.class?.split('.').pop() || 'Unknown'}
+                                    </div>
+                                    {hoveredElement.text && (
+                                        <div style={{ fontSize: '12px', marginTop: '6px', opacity: 0.9 }}>
+                                            Text: "{hoveredElement.text}"
+                                        </div>
+                                    )}
+                                    {hoveredElement.resource_id && (
+                                        <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
+                                            ID: {hoveredElement.resource_id.split('/').pop()}
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
 
