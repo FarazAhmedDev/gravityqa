@@ -2,8 +2,10 @@
 from fastapi import APIRouter, HTTPException
 from typing import Dict, List, Optional
 import xml.etree.ElementTree as ET
+from services.mobile.appium_service import AppiumService
 
 router = APIRouter(prefix="/api/inspector", tags=["inspector"])
+appium_service = AppiumService()  # Module-level instance
 
 # Global session storage (temporary - should use proper session management)
 _active_sessions = {}
@@ -94,8 +96,6 @@ def generate_xpath(elem: ET.Element) -> str:
 async def get_page_source():
     """Get UI hierarchy from active Appium session"""
     try:
-        from services.mobile.appium_service import appium_service
-        
         # Get latest active session
         if not appium_service.active_sessions:
             raise HTTPException(status_code=400, detail="No active Appium session. Please launch app first.")
