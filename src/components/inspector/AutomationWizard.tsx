@@ -1474,37 +1474,63 @@ export default function AutomationWizard() {
                                 />
                             )}
 
-                            {/* Inspector Element Info - Shows detected element */}
+                            {/* Selected Element Panel - Appium Inspector Style */}
                             {recordingMode === 'inspector' && hoveredElement && (
                                 <div style={{
                                     position: 'absolute',
-                                    top: '30px',
-                                    right: '30px',
-                                    padding: '12px 20px',
-                                    background: 'rgba(139, 92, 246, 0.95)',
-                                    color: 'white',
+                                    top: '20px',
+                                    right: '20px',
+                                    width: '340px',
+                                    maxHeight: 'calc(100vh - 280px)',
+                                    background: 'linear-gradient(135deg, #0d1117, #161b22)',
+                                    border: '2px solid #30a9de',
                                     borderRadius: '12px',
-                                    fontSize: '13px',
-                                    fontWeight: 600,
-                                    boxShadow: '0 4px 20px rgba(139, 92, 246, 0.6)',
-                                    zIndex: 1000,
-                                    maxWidth: '300px',
-                                    backdropFilter: 'blur(10px)'
+                                    boxShadow: '0 8px 32px rgba(48, 169, 222, 0.5)',
+                                    zIndex: 2000,
+                                    overflow: 'hidden'
                                 }}>
-                                    <div style={{ marginBottom: '4px', fontSize: '11px', opacity: 0.8 }}>DETECTED ELEMENT:</div>
-                                    <div style={{ fontSize: '14px', fontWeight: 700 }}>
-                                        {hoveredElement.class?.split('.').pop() || 'Unknown'}
+                                    <div style={{
+                                        padding: '14px 16px',
+                                        background: '#30a9de',
+                                        color: 'white',
+                                        fontSize: '14px',
+                                        fontWeight: 700
+                                    }}>
+                                        🎯 Selected Element
                                     </div>
-                                    {hoveredElement.text && (
-                                        <div style={{ fontSize: '12px', marginTop: '6px', opacity: 0.9 }}>
-                                            Text: "{hoveredElement.text}"
+                                    <div style={{ padding: '16px', maxHeight: 'calc(100vh - 360px)', overflowY: 'auto' }}>
+                                        {hoveredElement.resource_id && (
+                                            <div style={{ marginBottom: '12px', padding: '10px', background: '#161b22', borderRadius: '6px' }}>
+                                                <div style={{ fontSize: '10px', color: '#8b949e', marginBottom: '4px' }}>ID</div>
+                                                <div style={{ color: '#58a6ff', fontSize: '11px', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                                                    {hoveredElement.resource_id}
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div style={{ marginBottom: '12px', padding: '10px', background: '#161b22', borderRadius: '6px' }}>
+                                            <div style={{ fontSize: '10px', color: '#8b949e', marginBottom: '4px' }}>CLASS</div>
+                                            <div style={{ color: '#58a6ff', fontSize: '11px', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                                                {hoveredElement.class || 'N/A'}
+                                            </div>
                                         </div>
-                                    )}
-                                    {hoveredElement.resource_id && (
-                                        <div style={{ fontSize: '11px', marginTop: '4px', opacity: 0.8 }}>
-                                            ID: {hoveredElement.resource_id.split('/').pop()}
+                                        {hoveredElement.xpath && (
+                                            <div style={{ marginBottom: '12px', padding: '10px', background: '#161b22', borderRadius: '6px' }}>
+                                                <div style={{ fontSize: '10px', color: '#8b949e', marginBottom: '4px' }}>XPATH</div>
+                                                <div style={{ color: '#58a6ff', fontSize: '10px', fontFamily: 'monospace', wordBreak: 'break-all', maxHeight: '50px', overflowY: 'auto' }}>
+                                                    {hoveredElement.xpath}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {hoveredElement.text && (
+                                            <div style={{ marginBottom: '8px', fontSize: '11px' }}>
+                                                <span style={{ color: '#8b949e' }}>text: </span>
+                                                <span style={{ color: '#c9d1d9' }}>"{hoveredElement.text}"</span>
+                                            </div>
+                                        )}
+                                        <div style={{ fontSize: '11px', color: '#8b949e', marginTop: '12px' }}>
+                                            clickable: <span style={{ color: hoveredElement.clickable ? '#2ea043' : '#f85149' }}>{hoveredElement.clickable ? 'true' : 'false'}</span>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             )}
                         </div>
