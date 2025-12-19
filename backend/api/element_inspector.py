@@ -6,19 +6,19 @@ from services.mobile.appium_service import get_appium_service
 
 router = APIRouter(prefix="/api/inspector", tags=["inspector"])
 appium_service = get_appium_service()  # Shared singleton instance
+
 # Global session storage (temporary - should use proper session management)
 _active_sessions = {}
 
 def parse_bounds(bounds_str: str) -> Dict[str, int]:
     """Parse bounds string like '[100,200][300,400]' to dict"""
     try:
-        # Format: [x1,y1][x2,y2]
         parts = bounds_str.replace('][', ',').strip('[]').split(',')
         return {
             "x1": int(parts[0]),
             "y1": int(parts[1]),
             "x2": int(parts[2]),
-            "y2": int(parts[3])
+            "y3": int(parts[3])
         }
     except:
         return {"x1": 0, "y1": 0, "x2": 0, "y2": 0}
@@ -39,34 +39,50 @@ def element_to_dict(elem: ET.Element) -> Dict:
         "index": elem.get('index', '0')
     }
 
-def find_element_at_position(elem: ET.Element, x: int, y: int, current_path: List[str] = None) -> Optional[Dict]:
+def find_element_at_position(elem: ET.Element, x: int, y: int, current_path: List[str] = None, depth: int = 0) -> Optional[Dict]:
     """Recursively find deepest element containing (x, y)"""
     if current_path is None:
         current_path = []
     
-    bounds = parse_bounds(elem.get('bounds', '[0,0][0,0]'))
+    bounds_str = elem.get('bounds', '[0,0][0,0]')
+    try:
+        parts = bounds_str.replace('][', ',').strip('[]').split(',')
+        bounds = {
+            "x1": int(parts[0]),
+            "y1": int(parts[1]),
+            "x2": int(parts[2]),
+            "y2": int(parts[3])
+        }
+    except:
+        return None
+    
+    # Debug log for root
+    if depth == 0:
+        print(f"[Inspector] 🎯 Search at ({x},{y}), root bounds: {bounds}")
     
     # Check if point is within bounds
-    if not (bounds['x1'] <= x <= bounds['x2'] and bounds['y1'] <= y <= bounds['y2']):
+    in_bounds = bounds['x1'] <= x <= bounds['x2'] and bounds['y1'] <= y <= bounds['y2']
+    
+    if not in_bounds:
         return None
     
     # This element contains the point
-    class_name = elem.get('class', '').split('.')[-1]  # Get short class name
+    class_name = elem.get('class', '').split('.')[-1]
     current_path.append(class_name)
     
-    # Check children (try to find deepest element)
+    # Check children to find deepest
     deepest = None
     for child in elem:
-        result = find_element_at_position(child, x, y, current_path.copy())
+        result = find_element_at_position(child, x, y, current_path.copy(), depth + 1)
         if result:
-            deepest = result
-            break
+            deepest = result  # Keep going to find THE deepest
     
-    # If no child contains it, return this element
+    # If no deeper child, this is it!
     if not deepest:
         element_data = element_to_dict(elem)
         element_data['hierarchy'] = current_path
         element_data['xpath'] = generate_xpath(elem)
+        print(f"[Inspector] ✅ Found: {class_name}, ID: {elem.get('resource-id', 'N/A')}")
         return element_data
     
     return deepest
@@ -77,15 +93,10 @@ def generate_xpath(elem: ET.Element) -> str:
     text = elem.get('text', '')
     class_name = elem.get('class', '')
     
-    # Prefer resource-id (most reliable)
     if resource_id:
         return f"//*[@resource-id='{resource_id}']"
-    
-    # Then text
     if text:
         return f"//*[@text='{text}']"
-    
-    # Finally class
     if class_name:
         return f"//{class_name.split('.')[-1]}"
     
@@ -95,16 +106,12 @@ def generate_xpath(elem: ET.Element) -> str:
 async def get_page_source():
     """Get UI hierarchy from active Appium session"""
     try:
-        # Get latest active session
         if not appium_service.active_sessions:
             raise HTTPException(status_code=400, detail="No active Appium session. Please launch app first.")
         
-        # Get the latest session ID
         session_id = list(appium_service.active_sessions.keys())[-1]
-        
         print(f"[Inspector] Getting page source for session: {session_id}")
         
-        # Get page source XML using existing appium_service method
         page_source = appium_service.get_page_source(session_id)
         
         if not page_source:
@@ -112,7 +119,6 @@ async def get_page_source():
         
         print(f"[Inspector] Got page source ({len(page_source)} chars)")
         
-        # Parse XML to validate
         try:
             root = ET.fromstring(page_source)
             print(f"[Inspector] ✅ XML parsed successfully")
@@ -138,34 +144,37 @@ async def get_page_source():
 async def get_element_at_position(x: int, y: int):
     """Find element at given coordinates"""
     try:
+        print(f"[Inspector] 🎯 Finding element at ({x},{y})")
         
-        # Get latest active session
         if not appium_service.active_sessions:
+            print(f"[Inspector] ❌ No active sessions!")
             raise HTTPException(status_code=400, detail="No active Appium session")
         
-        # Get the latest session ID
         session_id = list(appium_service.active_sessions.keys())[-1]
+        print(f"[Inspector] Using session: {session_id}")
         
-        # Get page source using existing method
         page_source = appium_service.get_page_source(session_id)
         
-        if not page_source:
-            raise HTTPException(status_code=500, detail="Failed to get page source")
+        if not page_source or len(page_source) < 100:
+            print(f"[Inspector] ❌ Page source empty or too small: {len(page_source) if page_source else 0} chars")
+            raise HTTPException(status_code= 500, detail="Failed to get page source")
         
-        # Parse XML
+        print(f"[Inspector] Got page source: {len(page_source)} chars")
+        
         root = ET.fromstring(page_source)
+        print(f"[Inspector] Parsed XML, {len(list(root.iter()))} elements")
         
-        # Find element at position
         element = find_element_at_position(root, x, y)
         
         if not element:
+            print(f"[Inspector] ❌ No element found at ({x},{y})")
             return {
                 "found": False,
                 "x": x,
                 "y": y
             }
         
-        print(f"[Inspector] Found element at ({x},{y}): {element.get('class', 'unknown')}")
+        print(f"[Inspector] ✅ Returning element!")
         
         return {
             "found": True,
@@ -177,7 +186,7 @@ async def get_element_at_position(x: int, y: int):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[Inspector] Error finding element: {e}")
+        print(f"[Inspector] ❌ Error: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
