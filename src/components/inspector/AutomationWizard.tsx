@@ -1772,7 +1772,9 @@ export default function AutomationWizard() {
                             }}>
                                 {recordingMode === 'tap'
                                     ? '👆 Click on device to record taps'
-                                    : '👉 Click & drag on device to record swipes'}
+                                    : recordingMode === 'swipe'
+                                        ? '👉 Click & drag on device to record swipes'
+                                        : '🔍 Hover to detect elements, click to record with element info'}
                             </div>
 
                             {/* Recording Button */}
