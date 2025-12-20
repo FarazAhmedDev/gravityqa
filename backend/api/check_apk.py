@@ -84,6 +84,15 @@ async def check_apk_on_device(
         
         print(f"[CHECK] Final activity: {activity}")
         
+        # Store app info globally for code generation
+        from utils.app_config_store import app_config_store
+        app_config_store.set_app(
+            package_name=package_name,
+            activity=activity,
+            app_name=apk_info["app_name"] or apk.filename
+        )
+        print(f"[CHECK] ✅ Saved to global store for code generation")
+        
         return {
             "package_name": package_name,
             "app_name": apk_info["app_name"] or apk.filename,

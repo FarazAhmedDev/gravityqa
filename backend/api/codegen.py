@@ -17,10 +17,23 @@ async def generate_code(request: Dict):
         
         print(f"[CodeGen] Generating {language} code for {len(actions)} actions")
         
-        if language == 'python':
-            code = generate_python_code(actions)
+        # Get uploaded APK info from global store
+        from utils.app_config_store import app_config_store
+        app_info = app_config_store.get_app()
+        
+        app_package = app_info.get('package_name')
+        app_activity = app_info.get('activity')
+        
+        if app_package:
+            print(f"[CodeGen] 📱 Using uploaded APK: {app_package}")
+            print(f"[CodeGen] 🎯 Activity: {app_activity}")
         else:
-            code = generate_javascript_code(actions)
+            print(f"[CodeGen] ⚠️ No APK uploaded, using defaults")
+        
+        if language == 'python':
+            code = generate_python_code(actions, app_package, app_activity)
+        else:
+            code = generate_javascript_code(actions, app_package, app_activity)
         
         print(f"[CodeGen] ✅ Generated {len(code)} characters of code")
         
@@ -28,7 +41,9 @@ async def generate_code(request: Dict):
             "success": True,
             "language": language,
             "code": code,
-            "actions_count": len(actions)
+            "actions_count": len(actions),
+            "app_package": app_package,
+            "app_activity": app_activity
         }
         
     except HTTPException:
