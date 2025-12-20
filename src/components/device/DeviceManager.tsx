@@ -126,52 +126,85 @@ export default function DeviceManager() {
                 }}>
                     <div style={{
                         display: 'inline-block',
-                        padding: '10px 20px',
-                        background: 'linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(139, 92, 246, 0.2))',
-                        borderRadius: '24px',
-                        border: '1.5px solid rgba(88, 166, 255, 0.3)',
-                        marginBottom: '20px',
-                        animation: 'glow 3s ease-in-out infinite',
-                        boxShadow: '0 0 30px rgba(88, 166, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                        padding: '12px 24px',
+                        background: 'linear-gradient(135deg, rgba(88, 166, 255, 0.25), rgba(139, 92, 246, 0.25))',
+                        borderRadius: '28px',
+                        border: '2px solid rgba(88, 166, 255, 0.4)',
+                        marginBottom: '24px',
+                        animation: 'glow 3s ease-in-out infinite, float0 6s ease-in-out infinite',
+                        boxShadow: `
+                            0 0 40px rgba(88, 166, 255, 0.3),
+                            0 8px 32px rgba(0, 0, 0, 0.3),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                            inset 0 -1px 0 rgba(0, 0, 0, 0.2)
+                        `,
+                        position: 'relative',
+                        overflow: 'hidden'
                     }}>
+                        {/* Holographic moving light */}
+                        <div style={{
+                            position: 'absolute',
+                            top: '-50%',
+                            left: '-50%',
+                            width: '200%',
+                            height: '200%',
+                            background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)',
+                            animation: 'rotate 8s linear infinite',
+                            pointerEvents: 'none'
+                        }} />
                         <span style={{
-                            fontSize: '14px',
-                            fontWeight: 800,
-                            background: 'linear-gradient(135deg, #58a6ff, #a78bfa, #58a6ff)',
-                            backgroundSize: '200% 100%',
+                            position: 'relative',
+                            fontSize: '15px',
+                            fontWeight: 900,
+                            background: 'linear-gradient(135deg, #ffffff, #58a6ff, #a78bfa, #58a6ff, #ffffff)',
+                            backgroundSize: '300% 100%',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
-                            letterSpacing: '1.5px',
+                            letterSpacing: '2px',
                             textTransform: 'uppercase',
-                            animation: 'gradientFlow 3s linear infinite'
+                            animation: 'gradientFlow 4s linear infinite',
+                            filter: 'drop-shadow(0 0 8px rgba(88, 166, 255, 0.5))'
                         }}>
                             ⚡ Device Hub
                         </span>
                     </div>
 
                     <h2 style={{
-                        fontSize: '48px',
+                        fontSize: '56px',
                         fontWeight: 900,
-                        background: 'linear-gradient(135deg, #ffffff 0%, #58a6ff 50%, #a78bfa 100%)',
-                        backgroundSize: '200% 100%',
+                        background: activeTab === 'connected'
+                            ? 'linear-gradient(135deg, #ffffff 0%, #34d399 40%, #10b981 60%, #a78bfa 100%)'
+                            : 'linear-gradient(135deg, #ffffff 0%, #f87171 40%, #ef4444 60%, #a78bfa 100%)',
+                        backgroundSize: '300% 100%',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
-                        marginBottom: '14px',
-                        letterSpacing: '-2px',
-                        animation: 'gradientFlow 5s ease infinite, textFloat 4s ease-in-out infinite',
-                        textShadow: '0 0 40px rgba(88, 166, 255, 0.3)'
+                        marginBottom: '16px',
+                        letterSpacing: '-3px',
+                        animation: 'gradientFlow 6s ease infinite, textFloat 4s ease-in-out infinite',
+                        textShadow: activeTab === 'connected'
+                            ? '0 0 60px rgba(16, 185, 129, 0.4)'
+                            : '0 0 60px rgba(239, 68, 68, 0.4)',
+                        transform: 'perspective(500px) rotateX(5deg)',
+                        transformStyle: 'preserve-3d'
                     }}>
-                        Connected Devices
+                        {activeTab === 'connected' ? 'Connected Devices' : 'Disconnected Devices'}
                     </h2>
                     <p style={{
-                        fontSize: '18px',
-                        color: '#8b949e',
-                        fontWeight: 600,
-                        animation: 'fadeIn 1s ease-out 0.3s backwards'
+                        fontSize: '19px',
+                        color: '#a0aec0',
+                        fontWeight: 700,
+                        animation: 'fadeIn 1s ease-out 0.3s backwards',
+                        letterSpacing: '0.5px',
+                        textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
                     }}>
-                        {devices.length > 0
-                            ? `⚡ ${connectedCount} active device${connectedCount !== 1 ? 's' : ''} ready`
-                            : '⏳ Scanning for devices...'}
+                        {activeTab === 'connected'
+                            ? (connectedCount > 0
+                                ? `⚡ ${connectedCount} active device${connectedCount !== 1 ? 's' : ''} ready for testing`
+                                : '⏳ Waiting for device connection...')
+                            : (disconnectedCount > 0
+                                ? `📱 ${disconnectedCount} device${disconnectedCount !== 1 ? 's' : ''} offline`
+                                : '✨ All devices are connected!')
+                        }
                     </p>
                 </div>
 
