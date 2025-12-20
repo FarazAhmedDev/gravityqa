@@ -203,3 +203,43 @@ async def delete_file(filename: str):
     except Exception as e:
         print(f"[CodeEditor] ❌ Delete failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/convert")
+async def convert_code(request: Dict):
+    """Convert code between JavaScript and Python"""
+    try:
+        from_lang = request.get('from_language', 'javascript')
+        to_lang = request.get('to_language', 'python')
+        app_package = request.get('app_package', 'com.example.app')
+        app_activity = request.get('app_activity', 'com.example.app.MainActivity')
+        
+        print(f"[CodeEditor] 🔄 Converting {from_lang} → {to_lang}")
+        print(f"[CodeEditor] 📱 App: {app_package}")
+        
+        # Import code generators
+        import sys
+        sys.path.append('..')
+        from utils.code_generator import generate_javascript_code, generate_python_code
+        
+        # Generate template with app config
+        actions = []
+        
+        if to_lang == 'python':
+            converted = generate_python_code(actions, app_package, app_activity)
+            print(f"[CodeEditor] ✅ Converted to Python")
+        else:
+            converted = generate_javascript_code(actions, app_package, app_activity)
+            print(f"[CodeEditor] ✅ Converted to JavaScript")
+        
+        return {
+            "success": True,
+            "converted_code": converted,
+            "app_package": app_package,
+            "app_activity": app_activity
+        }
+        
+    except Exception as e:
+        print(f"[CodeEditor] ❌ Conversion failed: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
