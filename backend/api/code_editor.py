@@ -123,7 +123,7 @@ async def execute_code(request: Dict):
                 if 'webdriverio' in code or 'require(\'webdriverio\')' in code:
                     print("[CodeEditor] 📦 Installing webdriverio...")
                     install_result = subprocess.run(
-                        ['npm', 'install', '-g', 'webdriverio'],
+                        ['npm', 'install', 'webdriverio'],
                         capture_output=True,
                         text=True,
                         timeout=60
