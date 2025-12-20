@@ -150,7 +150,6 @@ class AppiumService:
         """Get page source (XML hierarchy) - SYNC version"""
         try:
             import requests
-            print(f"[AppiumService] Getting page source for session: {session_id}")
             response = requests.get(
                 f"http://{self.host}:{self.port}/session/{session_id}/source",
                 timeout=10
@@ -158,7 +157,6 @@ class AppiumService:
             
             if response.status_code == 200:
                 return response.json().get("value")
-            print(f"[AppiumService] ❌ Exception: {e}")
         except:
             pass
         
