@@ -141,37 +141,33 @@ export default function Header() {
                         <button
                             onClick={handleStopAppium}
                             style={{
-                                padding: '14px 28px',
-                                fontSize: '15px',
-                                fontWeight: 800,
+                                padding: '10px 18px',
+                                fontSize: '14px',
+                                fontWeight: 700,
                                 position: 'relative',
-                                background: 'linear-gradient(135deg, #fb7185 0%, #f43f5e 50%, #e11d48 100%)',
+                                background: 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%)',
                                 color: 'white',
                                 border: 'none',
-                                borderRadius: '16px',
+                                borderRadius: '12px',
                                 cursor: 'pointer',
                                 transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                overflow: 'hidden',
                                 boxShadow: `
                                     0 1px 0 0 rgba(255,255,255,0.4) inset,
                                     0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                    0 8px 24px -4px rgba(244,63,94,0.5),
-                                    0 16px 48px -8px rgba(244,63,94,0.3),
-                                    0 0 0 1px rgba(244,63,94,0.1)
+                                    0 6px 20px -4px rgba(16,185,129,0.5),
+                                    0 12px 40px -8px rgba(16,185,129,0.3)
                                 `,
-                                animation: 'glossyPulseRed 3s ease-in-out infinite',
-                                overflow: 'hidden',
-                                backdropFilter: 'blur(10px)',
-                                WebkitBackdropFilter: 'blur(10px)',
-                                letterSpacing: '0.3px'
+                                letterSpacing: '0.5px',
+                                textTransform: 'uppercase'
                             }}
                             onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-3px) scale(1.05)'
+                                e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'
                                 e.currentTarget.style.boxShadow = `
                                     0 1px 0 0 rgba(255,255,255,0.5) inset,
                                     0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                    0 12px 32px -4px rgba(244,63,94,0.6),
-                                    0 20px 60px -8px rgba(244,63,94,0.4),
-                                    0 0 0 1px rgba(244,63,94,0.2)
+                                    0 8px 28px -4px rgba(16,185,129,0.6),
+                                    0 16px 50px -8px rgba(16,185,129,0.4)
                                 `
                             }}
                             onMouseLeave={(e) => {
@@ -179,9 +175,8 @@ export default function Header() {
                                 e.currentTarget.style.boxShadow = `
                                     0 1px 0 0 rgba(255,255,255,0.4) inset,
                                     0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                    0 8px 24px -4px rgba(244,63,94,0.5),
-                                    0 16px 48px -8px rgba(244,63,94,0.3),
-                                    0 0 0 1px rgba(244,63,94,0.1)
+                                    0 6px 20px -4px rgba(16,185,129,0.5),
+                                    0 12px 40px -8px rgba(16,185,129,0.3)
                                 `
                             }}
                         >
@@ -193,7 +188,7 @@ export default function Header() {
                                 right: 0,
                                 height: '50%',
                                 background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.05) 100%)',
-                                borderRadius: '16px 16px 0 0',
+                                borderRadius: '12px 12px 0 0',
                                 pointerEvents: 'none'
                             }} />
                             <div style={{
@@ -212,11 +207,14 @@ export default function Header() {
                                 zIndex: 1,
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '10px',
+                                gap: '8px',
                                 filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'
                             }}>
-                                <span style={{ fontSize: '16px' }}>⏹️</span>
-                                Stop Appium
+                                {/* SVG Stop Icon */}
+                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.2))' }}>
+                                    <rect width="10" height="10" rx="1.5" fill="white" />
+                                </svg>
+                                Stop
                             </span>
                         </button>
                     ) : (
@@ -224,42 +222,38 @@ export default function Header() {
                             onClick={handleStartAppium}
                             disabled={isStarting}
                             style={{
-                                padding: '14px 28px',
-                                fontSize: '15px',
-                                fontWeight: 800,
+                                padding: '10px 18px',
+                                fontSize: '14px',
+                                fontWeight: 700,
                                 position: 'relative',
                                 background: isStarting
                                     ? 'linear-gradient(135deg, rgba(48, 54, 61, 0.5), rgba(39, 44, 50, 0.5))'
-                                    : 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%)',
+                                    : 'linear-gradient(135deg, #58a6ff 0%, #1f6feb 50%, #0969da 100%)',
                                 color: 'white',
                                 border: 'none',
-                                borderRadius: '16px',
+                                borderRadius: '12px',
                                 cursor: isStarting ? 'not-allowed' : 'pointer',
                                 transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                overflow: 'hidden',
                                 boxShadow: isStarting
                                     ? 'inset 0 2px 4px rgba(0,0,0,0.2)'
                                     : `
                                         0 1px 0 0 rgba(255,255,255,0.4) inset,
                                         0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                        0 8px 24px -4px rgba(16,185,129,0.5),
-                                        0 16px 48px -8px rgba(16,185,129,0.3),
-                                        0 0 0 1px rgba(16,185,129,0.1)
+                                        0 6px 20px -4px rgba(88,166,255,0.5),
+                                        0 12px 40px -8px rgba(88,166,255,0.3)
                                     `,
-                                animation: isStarting ? 'none' : 'glossyPulse 3s ease-in-out infinite',
-                                overflow: 'hidden',
-                                backdropFilter: 'blur(10px)',
-                                WebkitBackdropFilter: 'blur(10px)',
-                                letterSpacing: '0.3px'
+                                letterSpacing: '0.5px',
+                                textTransform: 'uppercase'
                             }}
                             onMouseEnter={(e) => {
                                 if (!isStarting) {
-                                    e.currentTarget.style.transform = 'translateY(-3px) scale(1.05)'
+                                    e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'
                                     e.currentTarget.style.boxShadow = `
                                         0 1px 0 0 rgba(255,255,255,0.5) inset,
                                         0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                        0 12px 32px -4px rgba(16,185,129,0.6),
-                                        0 20px 60px -8px rgba(16,185,129,0.4),
-                                        0 0 0 1px rgba(16,185,129,0.2)
+                                        0 8px 28px -4px rgba(88,166,255,0.6),
+                                        0 16px 50px -8px rgba(88,166,255,0.4)
                                     `
                                 }
                             }}
@@ -269,9 +263,8 @@ export default function Header() {
                                     e.currentTarget.style.boxShadow = `
                                         0 1px 0 0 rgba(255,255,255,0.4) inset,
                                         0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                        0 8px 24px -4px rgba(16,185,129,0.5),
-                                        0 16px 48px -8px rgba(16,185,129,0.3),
-                                        0 0 0 1px rgba(16,185,129,0.1)
+                                        0 6px 20px -4px rgba(88,166,255,0.5),
+                                        0 12px 40px -8px rgba(88,166,255,0.3)
                                     `
                                 }
                             }}
@@ -286,7 +279,7 @@ export default function Header() {
                                         right: 0,
                                         height: '50%',
                                         background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.05) 100%)',
-                                        borderRadius: '16px 16px 0 0',
+                                        borderRadius: '12px 12px 0 0',
                                         pointerEvents: 'none'
                                     }} />
                                     <div style={{
@@ -307,18 +300,21 @@ export default function Header() {
                                 zIndex: 1,
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '10px',
+                                gap: '8px',
                                 filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'
                             }}>
                                 {isStarting ? (
                                     <>
-                                        <span style={{ animation: 'spin 1s linear infinite' }}>⏳</span>
-                                        Starting...
+                                        <span style={{ animation: 'spin 1s linear infinite', fontSize: '11px' }}>⏳</span>
+                                        Starting
                                     </>
                                 ) : (
                                     <>
-                                        <span style={{ fontSize: '16px' }}>▶️</span>
-                                        Start Appium
+                                        {/* SVG Play Icon */}
+                                        <svg width="10" height="11" viewBox="0 0 10 11" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.2))' }}>
+                                            <path d="M2 1.5L9 5.5L2 9.5V1.5Z" fill="white" />
+                                        </svg>
+                                        Start
                                     </>
                                 )}
                             </span>
@@ -364,42 +360,6 @@ export default function Header() {
                     @keyframes shimmerGloss {
                         0% { left: -100%; }
                         50%, 100% { left: 200%; }
-                    }
-                    @keyframes glossyPulse {
-                        0%, 100% {
-                            box-shadow: 
-                                0 1px 0 0 rgba(255,255,255,0.4) inset,
-                                0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                0 8px 24px -4px rgba(16,185,129,0.5),
-                                0 16px 48px -8px rgba(16,185,129,0.3),
-                                0 0 0 1px rgba(16,185,129,0.1);
-                        }
-                        50% {
-                            box-shadow: 
-                                0 1px 0 0 rgba(255,255,255,0.5) inset,
-                                0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                            0 12px 32px -4px rgba(16,185,129,0.65),
-                                0 20px 56px -8px rgba(16,185,129,0.45),
-                                0 0 0 1px rgba(16,185,129,0.15);
-                        }
-                    }
-                    @keyframes glossyPulseRed {
-                        0%, 100% {
-                            box-shadow: 
-                                0 1px 0 0 rgba(255,255,255,0.4) inset,
-                                0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                0 8px 24px -4px rgba(244,63,94,0.5),
-                                0 16px 48px -8px rgba(244,63,94,0.3),
-                                0 0 0 1px rgba(244,63,94,0.1);
-                        }
-                        50% {
-                            box-shadow: 
-                                0 1px 0 0 rgba(255,255,255,0.5) inset,
-                                0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                0 12px 32px -4px rgba(244,63,94,0.65),
-                                0 20px 56px -8px rgba(244,63,94,0.45),
-                                0 0 0 1px rgba(244,63,94,0.15);
-                        }
                     }
                 `}</style>
             </div>
