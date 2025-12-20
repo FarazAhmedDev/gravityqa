@@ -142,6 +142,7 @@ export default function Header() {
                             onClick={handleStopAppium}
                             style={{
                                 padding: '10px 18px',
+                                height: '44px',
                                 fontSize: '14px',
                                 fontWeight: 700,
                                 position: 'relative',
