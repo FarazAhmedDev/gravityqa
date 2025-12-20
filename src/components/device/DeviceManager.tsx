@@ -761,7 +761,7 @@ export default function DeviceManager() {
                             : 'none',
                         animation: ws?.readyState === WebSocket.OPEN ? 'statusPulse 2.5s ease-in-out infinite' : 'none'
                     }}></div>
-                    {ws?.readyState === WebSocket.OPEN ? '🟢 Live Updates Active' : '🔴 Connecting...'}
+                    {ws?.readyState === WebSocket.OPEN ? 'Active' : 'Connecting...'}
                 </div>
             </div>
 
