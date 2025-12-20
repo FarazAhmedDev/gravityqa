@@ -119,6 +119,21 @@ async def execute_code(request: Dict):
                 temp_path = f.name
             
             try:
+                # Install webdriverio if code uses it
+                if 'webdriverio' in code or 'require(\'webdriverio\')' in code:
+                    print("[CodeEditor] 📦 Installing webdriverio...")
+                    install_result = subprocess.run(
+                        ['npm', 'install', '-g', 'webdriverio'],
+                        capture_output=True,
+                        text=True,
+                        timeout=60
+                    )
+                    if install_result.returncode == 0:
+                        print("[CodeEditor] ✅ webdriverio installed successfully")
+                    else:
+                        print(f"[CodeEditor] ⚠️ webdriverio install warning: {install_result.stderr}")
+                
+                # Execute the code
                 result = subprocess.run(
                     ['node', temp_path],
                     capture_output=True,
