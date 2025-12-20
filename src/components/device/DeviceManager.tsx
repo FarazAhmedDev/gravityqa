@@ -78,7 +78,7 @@ export default function DeviceManager() {
             minHeight: '100vh',
             background: '#0a0e14',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'auto'
         }}>
             {/* Animated Mesh Gradient Background */}
             <div style={{
