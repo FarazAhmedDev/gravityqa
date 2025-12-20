@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
-from api import projects, tests, devices, ai, websocket, inspector, realtime, flows, playback, appium_server, installed_apps, check_apk, element_inspector, codegen
+from api import projects, tests, devices, ai, websocket, inspector, realtime, flows, playback, appium_server, installed_apps, check_apk, element_inspector, codegen, code_editor
 from database import engine, Base
 
 # Create database tables
@@ -32,6 +32,7 @@ app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(inspector.router)
 app.include_router(element_inspector.router)  # Element Inspector
 app.include_router(codegen.router)  # Code Generator
+app.include_router(code_editor.router)  # Code Editor
 app.include_router(realtime.router)
 app.include_router(flows.router)
 app.include_router(playback.router)

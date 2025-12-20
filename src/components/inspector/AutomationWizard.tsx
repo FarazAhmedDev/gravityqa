@@ -343,7 +343,7 @@ export default function AutomationWizard() {
     // INSPECTOR MODE HANDLERS
     const handleInspectorHover = async (e: React.MouseEvent<HTMLImageElement>) => {
         console.log("[Inspector] 🎯 HOVER EVENT! recordingMode:", recordingMode);
-        
+
         if (recordingMode !== 'inspector') {
             console.log("[Inspector] ❌ Not inspector mode, returning");
             return;
@@ -673,15 +673,24 @@ export default function AutomationWizard() {
 
         try {
             console.log('[CodeGen] Generating', codeLanguage, 'code for', actions.length, 'actions')
-            
+
             const res = await axios.post('http://localhost:8000/api/codegen/generate', {
                 actions: actions,
                 language: codeLanguage
             })
 
             console.log('[CodeGen] ✅ Code generated successfully!')
-            setGeneratedCode(res.data.code)
-            setShowCodeModal(true)
+
+            // Save to localStorage for CodeEditor to pick up
+            localStorage.setItem('generatedCode', res.data.code)
+            localStorage.setItem('generatedLanguage', codeLanguage)
+
+            // Trigger event to switch to editor tab
+            window.dispatchEvent(new CustomEvent('openCodeEditor', {
+                detail: { code: res.data.code, language: codeLanguage }
+            }))
+
+            alert('✅ Code generated! Opening code editor...')
 
         } catch (error: any) {
             console.error('[CodeGen] ❌ Failed:', error)
@@ -1515,16 +1524,16 @@ export default function AutomationWizard() {
                                 (() => {
                                     const imgElement = document.querySelector('img[alt="Device Screen"]') as HTMLImageElement;
                                     if (!imgElement) return null;
-                                    
+
                                     const scaleX = imgElement.naturalWidth / imgElement.width;
                                     const scaleY = imgElement.naturalHeight / imgElement.height;
-                                    
+
                                     const bounds = hoveredElement.bounds;
                                     const left = bounds.x1 / scaleX;
                                     const top = bounds.y1 / scaleY;
                                     const width = (bounds.x2 - bounds.x1) / scaleX;
                                     const height = (bounds.y2 - bounds.y1) / scaleY;
-                                    
+
                                     return (
                                         <div style={{
                                             position: 'absolute',
@@ -2765,176 +2774,176 @@ export default function AutomationWizard() {
                         }
                     `}</style>
 
-            {/* Code Generation Modal */}
-            {showCodeModal && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0, 0, 0, 0.9)',
-                    backdropFilter: 'blur(8px)',
-                    zIndex: 10000,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    animation: 'fadeIn 0.3s ease-out'
-                }} onClick={() => setShowCodeModal(false)}>
-                    <div style={{
-                        width: '90%',
-                        maxWidth: '1000px',
-                        maxHeight: '90vh',
-                        background: 'linear-gradient(135deg, #0d1117 0%, #161b22 100%)',
-                        borderRadius: '16px',
-                        padding: '32px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(48,54,61,0.5)',
-                        overflow: 'hidden',
-                        display: 'flex',
-                        flexDirection: 'column'
-                    }} onClick={e => e.stopPropagation()}>
-                        
-                        {/* Header */}
+                    {/* Code Generation Modal */}
+                    {showCodeModal && (
                         <div style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(0, 0, 0, 0.9)',
+                            backdropFilter: 'blur(8px)',
+                            zIndex: 10000,
                             display: 'flex',
-                            justifyContent: 'space-between',
                             alignItems: 'center',
-                            marginBottom: '24px',
-                            borderBottom: '2px solid #30363d',
-                            paddingBottom: '16px'
-                        }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <span style={{ fontSize: '32px' }}>&lt;/&gt;</span>
-                                <h2 style={{
-                                    color: '#ffffff',
-                                    margin: 0,
-                                    fontSize: '28px',
-                                    fontWeight: 700
+                            justifyContent: 'center',
+                            animation: 'fadeIn 0.3s ease-out'
+                        }} onClick={() => setShowCodeModal(false)}>
+                            <div style={{
+                                width: '90%',
+                                maxWidth: '1000px',
+                                maxHeight: '90vh',
+                                background: 'linear-gradient(135deg, #0d1117 0%, #161b22 100%)',
+                                borderRadius: '16px',
+                                padding: '32px',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(48,54,61,0.5)',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column'
+                            }} onClick={e => e.stopPropagation()}>
+
+                                {/* Header */}
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: '24px',
+                                    borderBottom: '2px solid #30363d',
+                                    paddingBottom: '16px'
                                 }}>
-                                    Generated Test Code
-                                </h2>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <span style={{ fontSize: '32px' }}>&lt;/&gt;</span>
+                                        <h2 style={{
+                                            color: '#ffffff',
+                                            margin: 0,
+                                            fontSize: '28px',
+                                            fontWeight: 700
+                                        }}>
+                                            Generated Test Code
+                                        </h2>
+                                    </div>
+
+                                    <select
+                                        value={codeLanguage}
+                                        onChange={async (e) => {
+                                            setCodeLanguage(e.target.value as 'javascript' | 'python')
+                                            // Regenerate code with new language
+                                            const res = await axios.post('http://localhost:8000/api/codegen/generate', {
+                                                actions,
+                                                language: e.target.value
+                                            })
+                                            setGeneratedCode(res.data.code)
+                                        }}
+                                        style={{
+                                            padding: '10px 16px',
+                                            background: '#21262d',
+                                            color: '#c9d1d9',
+                                            border: '2px solid #30363d',
+                                            borderRadius: '8px',
+                                            fontSize: '14px',
+                                            fontWeight: 600,
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <option value="javascript">JavaScript (WebdriverIO)</option>
+                                        <option value="python">Python (Appium)</option>
+                                    </select>
+                                </div>
+
+                                {/* Code Display */}
+                                <div style={{
+                                    flex: 1,
+                                    overflow: 'auto',
+                                    background: '#0d1117',
+                                    borderRadius: '8px',
+                                    padding: '20px',
+                                    border: '1px solid #30363d',
+                                    marginBottom: '24px'
+                                }}>
+                                    <pre style={{
+                                        color: '#c9d1d9',
+                                        fontFamily: 'Monaco, Consolas, monospace',
+                                        fontSize: '13px',
+                                        lineHeight: '1.6',
+                                        margin: 0,
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-word'
+                                    }}>
+                                        {generatedCode}
+                                    </pre>
+                                </div>
+
+                                {/* Actions */}
+                                <div style={{
+                                    display: 'flex',
+                                    gap: '12px',
+                                    justifyContent: 'flex-end'
+                                }}>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(generatedCode)
+                                            alert('✅ Code copied to clipboard!')
+                                        }}
+                                        style={{
+                                            padding: '12px 24px',
+                                            background: 'linear-gradient(135deg, #238636, #2ea043)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            fontSize: '14px',
+                                            fontWeight: 600,
+                                            cursor: 'pointer',
+                                            boxShadow: '0 0 15px rgba(46, 160, 67, 0.3)'
+                                        }}
+                                    >
+                                        📋 Copy Code
+                                    </button>
+
+                                    <button
+                                        onClick={() => {
+                                            const blob = new Blob([generatedCode], { type: 'text/plain' })
+                                            const url = URL.createObjectURL(blob)
+                                            const a = document.createElement('a')
+                                            a.href = url
+                                            a.download = `test.${codeLanguage === 'javascript' ? 'js' : 'py'}`
+                                            a.click()
+                                            URL.revokeObjectURL(url)
+                                        }}
+                                        style={{
+                                            padding: '12px 24px',
+                                            background: 'linear-gradient(135deg, #1f6feb, #1158c7)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            fontSize: '14px',
+                                            fontWeight: 600,
+                                            cursor: 'pointer',
+                                            boxShadow: '0 0 15px rgba(31, 111, 235, 0.3)'
+                                        }}
+                                    >
+                                        💾 Download
+                                    </button>
+
+                                    <button
+                                        onClick={() => setShowCodeModal(false)}
+                                        style={{
+                                            padding: '12px 24px',
+                                            background: '#21262d',
+                                            color: '#c9d1d9',
+                                            border: '2px solid #30363d',
+                                            borderRadius: '8px',
+                                            fontSize: '14px',
+                                            fontWeight: 600,
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Close
+                                    </button>
+                                </div>
                             </div>
-                            
-                            <select
-                                value={codeLanguage}
-                                onChange={async (e) => {
-                                    setCodeLanguage(e.target.value as 'javascript' | 'python')
-                                    // Regenerate code with new language
-                                    const res = await axios.post('http://localhost:8000/api/codegen/generate', {
-                                        actions,
-                                        language: e.target.value
-                                    })
-                                    setGeneratedCode(res.data.code)
-                                }}
-                                style={{
-                                    padding: '10px 16px',
-                                    background: '#21262d',
-                                    color: '#c9d1d9',
-                                    border: '2px solid #30363d',
-                                    borderRadius: '8px',
-                                    fontSize: '14px',
-                                    fontWeight: 600,
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <option value="javascript">JavaScript (WebdriverIO)</option>
-                                <option value="python">Python (Appium)</option>
-                            </select>
                         </div>
-
-                        {/* Code Display */}
-                        <div style={{
-                            flex: 1,
-                            overflow: 'auto',
-                            background: '#0d1117',
-                            borderRadius: '8px',
-                            padding: '20px',
-                            border: '1px solid #30363d',
-                            marginBottom: '24px'
-                        }}>
-                            <pre style={{
-                                color: '#c9d1d9',
-                                fontFamily: 'Monaco, Consolas, monospace',
-                                fontSize: '13px',
-                                lineHeight: '1.6',
-                                margin: 0,
-                                whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-word'
-                            }}>
-                                {generatedCode}
-                            </pre>
-                        </div>
-
-                        {/* Actions */}
-                        <div style={{
-                            display: 'flex',
-                            gap: '12px',
-                            justifyContent: 'flex-end'
-                        }}>
-                            <button
-                                onClick={() => {
-                                    navigator.clipboard.writeText(generatedCode)
-                                    alert('✅ Code copied to clipboard!')
-                                }}
-                                style={{
-                                    padding: '12px 24px',
-                                    background: 'linear-gradient(135deg, #238636, #2ea043)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    fontSize: '14px',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    boxShadow: '0 0 15px rgba(46, 160, 67, 0.3)'
-                                }}
-                            >
-                                📋 Copy Code
-                            </button>
-                            
-                            <button
-                                onClick={() => {
-                                    const blob = new Blob([generatedCode], { type: 'text/plain' })
-                                    const url = URL.createObjectURL(blob)
-                                    const a = document.createElement('a')
-                                    a.href = url
-                                    a.download = `test.${codeLanguage === 'javascript' ? 'js' : 'py'}`
-                                    a.click()
-                                    URL.revokeObjectURL(url)
-                                }}
-                                style={{
-                                    padding: '12px 24px',
-                                    background: 'linear-gradient(135deg, #1f6feb, #1158c7)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '8px',
-                                    fontSize: '14px',
-                                    fontWeight: 600,
-                                    cursor: 'pointer',
-                                    boxShadow: '0 0 15px rgba(31, 111, 235, 0.3)'
-                                }}
-                            >
-                                💾 Download
-                            </button>
-                            
-                            <button
-                                onClick={() => setShowCodeModal(false)}
-                                style={{
-                                    padding: '12px 24px',
-                                    background: '#21262d',
-                                    color: '#c9d1d9',
-                                    border: '2px solid #30363d',
-                                    borderRadius: '8px',
-                                    fontSize: '14px',
-                                    fontWeight: 600,
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                    )}
                 </div>
             )}
         </div>

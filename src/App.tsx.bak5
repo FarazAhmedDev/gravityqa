@@ -1,4 +1,4 @@
-
+```javascript
 import { useState, useEffect } from 'react'
 import { useAutoCleanup } from './hooks/useAutoCleanup'
 import Sidebar from './components/layout/Sidebar'
