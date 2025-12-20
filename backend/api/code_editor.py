@@ -5,6 +5,7 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
+import shutil
 
 router = APIRouter(prefix="/api/code", tags=["code"])
 
@@ -113,29 +114,35 @@ async def execute_code(request: Dict):
                 os.unlink(temp_path)
                 
         elif language == 'javascript':
-            # Execute JavaScript with Node.js
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as f:
-                f.write(code)
-                temp_path = f.name
+            # Create temp directory for execution with dependencies
+            temp_dir = tempfile.mkdtemp()
+            temp_file_path = os.path.join(temp_dir, 'test.js')
             
             try:
+                # Write code to temp directory
+                with open(temp_file_path, 'w') as f:
+                    f.write(code)
+                
                 # Install webdriverio if code uses it
                 if 'webdriverio' in code or 'require(\'webdriverio\')' in code:
-                    print("[CodeEditor] 📦 Installing webdriverio...")
+                    print(f"[CodeEditor] 📦 Installing webdriverio in {temp_dir}...")
                     install_result = subprocess.run(
                         ['npm', 'install', 'webdriverio'],
+                        cwd=temp_dir,
                         capture_output=True,
                         text=True,
                         timeout=60
                     )
+                    
                     if install_result.returncode == 0:
                         print("[CodeEditor] ✅ webdriverio installed successfully")
                     else:
                         print(f"[CodeEditor] ⚠️ webdriverio install warning: {install_result.stderr}")
                 
-                # Execute the code
+                # Execute the code from temp directory (so it finds node_modules)
                 result = subprocess.run(
-                    ['node', temp_path],
+                    ['node', 'test.js'],
+                    cwd=temp_dir,  # Run in temp dir where node_modules exists
                     capture_output=True,
                     text=True,
                     timeout=30
@@ -157,7 +164,11 @@ async def execute_code(request: Dict):
                     }
                     
             finally:
-                os.unlink(temp_path)
+                # Clean up temp directory
+                try:
+                    shutil.rmtree(temp_dir)
+                except:
+                    pass
         
         else:
             raise HTTPException(status_code=400, detail="Unsupported language")

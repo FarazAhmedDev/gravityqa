@@ -2,29 +2,29 @@
 # Install with: pip3 install -r requirements.txt
 
 # Core Framework
-fastapi==0.115.5
-uvicorn[standard]==0.32.1
-python-multipart==0.0.20
-pydantic==2.10.3
-websockets==14.1
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+websockets
 
 # Database
-sqlalchemy==2.0.36
-alembic==1.16.0
+sqlalchemy
+alembic
 
 # Mobile Testing
-Appium-Python-Client==4.2.1
-selenium==4.27.1
+Appium-Python-Client
+selenium
 
 # APK Analysis
-androguard==4.1.2
+androguard
 
 # AI & Vision
-openai==1.57.4
-anthropic==0.42.0
-Pillow==11.0.0
+openai
+anthropic
+Pillow
 
 # Utilities
-python-dotenv==1.0.1
-requests==2.32.3
-aiofiles==24.1.0
+python-dotenv
+requests
+aiofiles
