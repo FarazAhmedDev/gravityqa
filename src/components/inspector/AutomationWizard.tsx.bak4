@@ -2764,6 +2764,9 @@ export default function AutomationWizard() {
                             100% { transform: scale(1); }
                         }
                     `}</style>
+                </div>
+            )}
+        </div>
 
             {/* Code Generation Modal */}
             {showCodeModal && (
@@ -2935,9 +2938,5 @@ export default function AutomationWizard() {
                     </div>
                 </div>
             )}
-                </div>
-            )}
-        </div>
-
     )
 }
