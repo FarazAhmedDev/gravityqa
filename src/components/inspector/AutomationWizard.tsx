@@ -1639,6 +1639,50 @@ export default function AutomationWizard() {
                                 }}>
                                     📋 Recorded Actions ({actions.length})
                                 </h3>
+
+                                {/* Open in Code Editor Button */}
+                                <button
+                                    onClick={handleGenerateCode}
+                                    disabled={actions.length === 0}
+                                    style={{
+                                        width: '100%',
+                                        padding: '16px 24px',
+                                        marginBottom: '20px',
+                                        background: actions.length === 0
+                                            ? 'rgba(48, 54, 61, 0.5)'
+                                            : 'linear-gradient(135deg, #1f6feb 0%, #1158c7 100%)',
+                                        color: actions.length === 0 ? '#6e7681' : 'white',
+                                        border: 'none',
+                                        borderRadius: '12px',
+                                        cursor: actions.length === 0 ? 'not-allowed' : 'pointer',
+                                        fontWeight: 700,
+                                        fontSize: '15px',
+                                        boxShadow: actions.length === 0
+                                            ? 'none'
+                                            : '0 0 20px rgba(31, 111, 235, 0.4), 0 4px 12px rgba(0,0,0,0.3)',
+                                        transition: 'all 0.3s',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '10px'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (actions.length > 0) {
+                                            e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'
+                                            e.currentTarget.style.boxShadow = '0 0 30px rgba(31, 111, 235, 0.6), 0 8px 20px rgba(0,0,0,0.4)'
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                                        e.currentTarget.style.boxShadow = actions.length === 0
+                                            ? 'none'
+                                            : '0 0 20px rgba(31, 111, 235, 0.4), 0 4px 12px rgba(0,0,0,0.3)'
+                                    }}
+                                >
+                                    <span style={{ fontSize: '20px' }}>&lt;/&gt;</span>
+                                    <span>Open in Code Editor</span>
+                                    <span style={{ fontSize: '16px' }}>→</span>
+                                </button>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                     {actions.map(action => (
                                         <div
