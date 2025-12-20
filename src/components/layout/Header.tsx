@@ -145,7 +145,7 @@ export default function Header() {
                                 fontSize: '14px',
                                 fontWeight: 700,
                                 position: 'relative',
-                                background: 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%)',
+                                background: 'linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%)',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '12px',
@@ -155,8 +155,8 @@ export default function Header() {
                                 boxShadow: `
                                     0 1px 0 0 rgba(255,255,255,0.4) inset,
                                     0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                    0 6px 20px -4px rgba(16,185,129,0.5),
-                                    0 12px 40px -8px rgba(16,185,129,0.3)
+                                    0 6px 20px -4px rgba(239,68,68,0.5),
+                                    0 12px 40px -8px rgba(239,68,68,0.3)
                                 `,
                                 letterSpacing: '0.5px',
                                 textTransform: 'uppercase'
@@ -166,8 +166,8 @@ export default function Header() {
                                 e.currentTarget.style.boxShadow = `
                                     0 1px 0 0 rgba(255,255,255,0.5) inset,
                                     0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                    0 8px 28px -4px rgba(16,185,129,0.6),
-                                    0 16px 50px -8px rgba(16,185,129,0.4)
+                                    0 8px 28px -4px rgba(239,68,68,0.6),
+                                    0 16px 50px -8px rgba(239,68,68,0.4)
                                 `
                             }}
                             onMouseLeave={(e) => {
@@ -175,8 +175,8 @@ export default function Header() {
                                 e.currentTarget.style.boxShadow = `
                                     0 1px 0 0 rgba(255,255,255,0.4) inset,
                                     0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                    0 6px 20px -4px rgba(16,185,129,0.5),
-                                    0 12px 40px -8px rgba(16,185,129,0.3)
+                                    0 6px 20px -4px rgba(239,68,68,0.5),
+                                    0 12px 40px -8px rgba(239,68,68,0.3)
                                 `
                             }}
                         >
@@ -210,9 +210,9 @@ export default function Header() {
                                 gap: '8px',
                                 filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'
                             }}>
-                                {/* SVG Stop Icon */}
-                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.2))' }}>
-                                    <rect width="10" height="10" rx="1.5" fill="white" />
+                                {/* SVG Stop Icon - Octagon */}
+                                <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.2))' }}>
+                                    <path d="M3.5 0.5H7.5L10.5 3.5V7.5L7.5 10.5H3.5L0.5 7.5V3.5L3.5 0.5Z" fill="white" stroke="white" strokeWidth="0.5" />
                                 </svg>
                                 Stop
                             </span>
@@ -228,7 +228,7 @@ export default function Header() {
                                 position: 'relative',
                                 background: isStarting
                                     ? 'linear-gradient(135deg, rgba(48, 54, 61, 0.5), rgba(39, 44, 50, 0.5))'
-                                    : 'linear-gradient(135deg, #58a6ff 0%, #1f6feb 50%, #0969da 100%)',
+                                    : 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%)',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '12px',
@@ -240,8 +240,8 @@ export default function Header() {
                                     : `
                                         0 1px 0 0 rgba(255,255,255,0.4) inset,
                                         0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                        0 6px 20px -4px rgba(88,166,255,0.5),
-                                        0 12px 40px -8px rgba(88,166,255,0.3)
+                                        0 6px 20px -4px rgba(16,185,129,0.5),
+                                        0 12px 40px -8px rgba(16,185,129,0.3)
                                     `,
                                 letterSpacing: '0.5px',
                                 textTransform: 'uppercase'
@@ -252,8 +252,8 @@ export default function Header() {
                                     e.currentTarget.style.boxShadow = `
                                         0 1px 0 0 rgba(255,255,255,0.5) inset,
                                         0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                        0 8px 28px -4px rgba(88,166,255,0.6),
-                                        0 16px 50px -8px rgba(88,166,255,0.4)
+                                        0 8px 28px -4px rgba(16,185,129,0.6),
+                                        0 16px 50px -8px rgba(16,185,129,0.4)
                                     `
                                 }
                             }}
@@ -263,8 +263,8 @@ export default function Header() {
                                     e.currentTarget.style.boxShadow = `
                                         0 1px 0 0 rgba(255,255,255,0.4) inset,
                                         0 -1px 0 0 rgba(0,0,0,0.2) inset,
-                                        0 6px 20px -4px rgba(88,166,255,0.5),
-                                        0 12px 40px -8px rgba(88,166,255,0.3)
+                                        0 6px 20px -4px rgba(16,185,129,0.5),
+                                        0 12px 40px -8px rgba(16,185,129,0.3)
                                     `
                                 }
                             }}
@@ -310,9 +310,10 @@ export default function Header() {
                                     </>
                                 ) : (
                                     <>
-                                        {/* SVG Play Icon */}
-                                        <svg width="10" height="11" viewBox="0 0 10 11" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.2))' }}>
-                                            <path d="M2 1.5L9 5.5L2 9.5V1.5Z" fill="white" />
+                                        {/* SVG Play Icon - Circle with triangle */}
+                                        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style={{ filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.2))' }}>
+                                            <circle cx="5.5" cy="5.5" r="5" fill="white" fillOpacity="0.95" />
+                                            <path d="M4.5 3.5L7.5 5.5L4.5 7.5V3.5Z" fill="#10b981" />
                                         </svg>
                                         Start
                                     </>
