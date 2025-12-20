@@ -1481,40 +1481,6 @@ export default function AutomationWizard() {
                                 />
                             )}
 
-
-                            {/* Visual Highlight Box - Real-time element bounds */}
-                            {recordingMode === 'inspector' && hoveredElement && hoveredElement.bounds && screenshot && (
-                                (() => {
-                                    const imgElement = document.querySelector('img[alt="Device Screen"]') as HTMLImageElement;
-                                    if (!imgElement) return null;
-                                    
-                                    const scaleX = imgElement.naturalWidth / imgElement.width;
-                                    const scaleY = imgElement.naturalHeight / imgElement.height;
-                                    
-                                    const bounds = hoveredElement.bounds;
-                                    const left = bounds.x1 / scaleX;
-                                    const top = bounds.y1 / scaleY;
-                                    const width = (bounds.x2 - bounds.x1) / scaleX;
-                                    const height = (bounds.y2 - bounds.y1) / scaleY;
-                                    
-                                    return (
-                                        <div style={{
-                                            position: 'absolute',
-                                            left: `${left}px`,
-                                            top: `${top}px`,
-                                            width: `${width}px`,
-                                            height: `${height}px`,
-                                            border: '2px solid #30a9de',
-                                            borderRadius: '4px',
-                                            pointerEvents: 'none',
-                                            zIndex: 999,
-                                            boxShadow: '0 0 10px rgba(48, 169, 222, 0.6), inset 0 0 10px rgba(48, 169, 222, 0.1)',
-                                            background: 'rgba(48, 169, 222, 0.05)',
-                                            transition: 'all 0.15s ease-out'
-                                        }} />
-                                    );
-                                })()
-                            )}
                             {/* Selected Element Panel - Appium Inspector Style */}
                             {recordingMode === 'inspector' && hoveredElement && (
                                 <div style={{

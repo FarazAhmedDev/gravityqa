@@ -146,22 +146,42 @@ class AppiumService:
             print(f"Error deleting session: {e}")
             return False
     
-    def get_page_source(self, session_id: str) -> Optional[str]:
-        """Get page source (XML hierarchy) - SYNC version"""
-        try:
-            import requests
-            print(f"[AppiumService] Getting page source for session: {session_id}")
-            response = requests.get(
-                f"http://{self.host}:{self.port}/session/{session_id}/source",
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                return response.json().get("value")
-            print(f"[AppiumService] ❌ Exception: {e}")
-        except:
-            pass
+    def get_page_source(self, session_id: str, retries=3) -> Optional[str]:
+        """Get page source (XML hierarchy) - SYNC version with retries"""
+        import requests
+        import time
         
+        for attempt in range(retries):
+            try:
+                print(f"[AppiumService] Getting page source (attempt {attempt + 1}/{retries}) for session: {session_id}")
+                
+                response = requests.get(
+                    f"http://{self.host}:{self.port}/session/{session_id}/source",
+                    timeout=10
+                )
+                
+                print(f"[AppiumService] Response status: {response.status_code}")
+                
+                if response.status_code == 200:
+                    xml = response.json().get("value")
+                    
+                    if xml and len(xml) > 100:
+                        print(f"[AppiumService] ✅ Got page source: {len(xml)} chars")
+                        return xml
+                    else:
+                        print(f"[AppiumService] ⚠️ XML too small or empty: {len(xml) if xml else 0} chars, retrying...")
+                        time.sleep(0.5)
+                else:
+                    print(f"[AppiumService] ❌ Bad status {response.status_code}: {response.text[:200]}")
+                    time.sleep(0.5)
+                    
+            except Exception as e:
+                print(f"[AppiumService] ❌ Exception on attempt {attempt + 1}: {e}")
+                import traceback
+                traceback.print_exc()
+                time.sleep(0.5)
+        
+        print(f"[AppiumService] ❌ Failed to get page source after {retries} attempts")
         return None
     
     async def get_screenshot(self, session_id: str) -> Optional[str]:

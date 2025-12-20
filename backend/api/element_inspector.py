@@ -190,3 +190,63 @@ async def get_element_at_position(x: int, y: int):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/execute-tap")
+async def execute_tap(request: dict):
+    """Execute tap on device and return action object for recording"""
+    try:
+        element = request.get('element')
+        coordinates = request.get('coordinates')
+        
+        print(f"[Inspector] Execute tap requested for element: {element.get('class', 'unknown')}")
+        
+        # Get active session
+        if not appium_service.active_sessions:
+            print("[Inspector] ❌ No active sessions!")
+            raise HTTPException(status_code=400, detail="No active Appium session")
+        
+        session_id = list(appium_service.active_sessions.keys())[-1]
+        print(f"[Inspector] Using session: {session_id}")
+        
+        # Calculate center of element bounds
+        bounds = element.get('bounds',{})
+        x = (bounds.get('x1', 0) + bounds.get('x2', 0)) // 2
+        y = (bounds.get('y1', 0) + bounds.get('y2', 0)) // 2
+        
+        print(f"[Inspector] Tapping at element center: ({x}, {y})")
+        
+        # Execute tap on device
+        await appium_service.tap_at_coordinate(session_id, x, y)
+        
+        print(f"[Inspector] ✅ Tap executed successfully!")
+        
+        # Create action object
+        import time
+        action = {
+            "action": "tap",
+            "timestamp": time.time(),
+            "target": {
+                "strategy": "id" if element.get('resource_id') else "xpath",
+                "value": element.get('resource_id') or element.get('xpath') or ""
+            },
+            "fallback": {
+                "x": coordinates.get('x', x),
+                "y": coordinates.get('y', y)
+            },
+            "meta": {
+                "class": element.get('class', ''),
+                "text": element.get('text', ''),
+                "contentDesc": element.get('content_desc', ''),
+                "clickable": element.get('clickable', False)
+            }
+        }
+        
+        print(f"[Inspector] ✅ Action created: {action['action']} → {action['meta'].get('text') or action['meta']['class']}")
+        
+        return action
+        
+    except Exception as e:
+        print(f"[Inspector] ❌ Execute tap failed: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
