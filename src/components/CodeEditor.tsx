@@ -438,25 +438,25 @@ export default function CodeEditor() {
     }
 
     const colors = theme === 'dark' ? {
-        bg: '#1e1e1e',
-        bgSecondary: '#252526',
-        bgTertiary: '#2d2d30',
-        border: '#3e3e42',
-        text: '#d4d4d4',
-        textSecondary: '#888',
+        bg: 'linear-gradient(135deg, #0d1117 0%, #161b22 100%)',
+        bgSecondary: 'linear-gradient(135deg, #161b22 0%, #1c2128 100%)',
+        bgTertiary: 'linear-gradient(135deg, #1c2128 0%, #21262d 100%)',
+        border: '#30363d',
+        text: '#e6edf3',
+        textSecondary: '#8b949e',
         accent: '#58a6ff',
         success: '#3fb950',
         lineNumber: '#858585'
     } : {
-        bg: '#ffffff',
-        bgSecondary: '#f3f3f3',
-        bgTertiary: '#e8e8e8',
-        border: '#d0d0d0',
-        text: '#24292e',
-        textSecondary: '#6a737d',
-        accent: '#0366d6',
-        success: '#28a745',
-        lineNumber: '#959da5'
+        bg: 'linear-gradient(135deg, #ffffff 0%, #f6f8fa 100%)',
+        bgSecondary: 'linear-gradient(135deg, #f6f8fa 0%, #eaeef2 100%)',
+        bgTertiary: 'linear-gradient(135deg, #eaeef2 0%, #d0d7de 100%)',
+        border: '#d0d7de',
+        text: '#24292f',
+        textSecondary: '#57606a',
+        accent: '#0969da',
+        success: '#1a7f37',
+        lineNumber: '#57606a'
     }
 
     return (
@@ -466,8 +466,42 @@ export default function CodeEditor() {
             display: 'flex',
             flexDirection: 'column',
             color: colors.text,
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            position: 'relative',
+            overflow: 'hidden'
         }}>
+            {/* Animated Floating Background */}
+            <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: theme === 'dark'
+                    ? 'radial-gradient(circle at 20% 50%, rgba(88,166,255,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(167,139,250,0.08) 0%, transparent 50%)'
+                    : 'radial-gradient(circle at 20% 50%, rgba(9,105,218,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(130,80,223,0.05) 0%, transparent 50%)',
+                animation: 'floatBackground 20s ease-in-out infinite',
+                pointerEvents: 'none',
+                zIndex: 0
+            }} />
+
+            {/* Particles Effect */}
+            {[...Array(3)].map((_, i) => (
+                <div key={i} style={{
+                    position: 'absolute',
+                    width: i === 0 ? '400px' : i === 1 ? '300px' : '350px',
+                    height: i === 0 ? '400px' : i === 1 ? '300px' : '350px',
+                    top: i === 0 ? '10%' : i === 1 ? '60%' : '40%',
+                    left: i === 0 ? '70%' : i === 1 ? '5%' : '50%',
+                    background: theme === 'dark'
+                        ? `radial-gradient(circle, rgba(88,166,255,0.03) 0%, transparent 70%)`
+                        : `radial-gradient(circle, rgba(9,105,218,0.02) 0%, transparent 70%)`,
+                    borderRadius: '50%',
+                    animation: `floatParticle${i} ${15 + i * 3}s ease-in-out infinite`,
+                    pointerEvents: 'none',
+                    zIndex: 0
+                }} />
+            ))}
             {/* Top Bar */}
             <div style={{
                 background: `linear-gradient(135deg, ${colors.bgTertiary} 0%, ${colors.bgSecondary} 100%)`,
@@ -481,13 +515,21 @@ export default function CodeEditor() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
                     <h1 style={{
                         margin: 0,
-                        fontSize: '26px',
-                        fontWeight: 700,
+                        fontSize: '28px',
+                        fontWeight: 800,
                         background: 'linear-gradient(135deg, #58a6ff 0%, #a78bfa 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
-                        letterSpacing: '-0.5px'
+                        letterSpacing: '-1px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px'
                     }}>
+                        <span style={{
+                            fontSize: '32px',
+                            animation: 'iconFloat 3s ease-in-out infinite',
+                            filter: 'drop-shadow(0 4px 8px rgba(88,166,255,0.3))'
+                        }}>💻</span>
                         Code Editor
                     </h1>
 
@@ -945,6 +987,75 @@ export default function CodeEditor() {
                     <span>Ln {cursorPosition.line}, Col {cursorPosition.column}</span>
                 </div>
             </div>
+
+            {/* Premium CSS Animations */}
+            <style>{`
+                @keyframes floatBackground {
+                    0%, 100% { 
+                        transform: translate(0, 0) rotate(0deg); 
+                        opacity: 1;
+                    }
+                    33% { 
+                        transform: translate(30px, -30px) rotate(120deg); 
+                        opacity: 0.8;
+                    }
+                    66% { 
+                        transform: translate(-20px, 20px) rotate(240deg); 
+                        opacity: 0.9;
+                    }
+                }
+                
+                @keyframes floatParticle0 {
+                    0%, 100% { transform: translate(0, 0) scale(1); }
+                    50% { transform: translate(-50px, -50px) scale(1.1); }
+                }
+                
+                @keyframes floatParticle1 {
+                    0%, 100% { transform: translate(0, 0) scale(1); }
+                    50% { transform: translate(40px, 60px) scale(0.9); }
+                }
+                
+                @keyframes floatParticle2 {
+                    0%, 100% { transform: translate(0, 0) scale(1); }
+                    50% { transform: translate(-30px, 50px) scale(1.05); }
+                }
+                
+                @keyframes iconFloat {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-8px); }
+                }
+                
+                @keyframes slideIn {
+                    from { 
+                        opacity: 0; 
+                        transform: translateX(20px); 
+                    }
+                    to { 
+                        opacity: 1; 
+                        transform: translateX(0); 
+                    }
+                }
+                
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.7; }
+                }
+                
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                
+                @keyframes shimmer {
+                    0% { background-position: -1000px 0; }
+                    100% { background-position: 1000px 0; }
+                }
+            `}</style>
         </div>
     )
 }
