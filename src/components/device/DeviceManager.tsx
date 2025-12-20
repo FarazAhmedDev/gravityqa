@@ -639,50 +639,6 @@ export default function DeviceManager() {
                                                 </span>
                                             </div>
                                         </div>
-
-                                        {/* Select Device Button - Only for Connected Devices */}
-                                        {device.is_connected && (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    setSelectedDevice(device)
-                                                }}
-                                                style={{
-                                                    marginTop: '20px',
-                                                    width: '100%',
-                                                    padding: '12px',
-                                                    background: selectedDevice?.id === device.id
-                                                        ? 'linear-gradient(135deg, #34d399, #10b981)'
-                                                        : 'linear-gradient(135deg, #58a6ff, #1f6feb)',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '10px',
-                                                    fontSize: '13px',
-                                                    fontWeight: 800,
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.3s ease',
-                                                    textTransform: 'uppercase',
-                                                    letterSpacing: '0.5px',
-                                                    boxShadow: selectedDevice?.id === device.id
-                                                        ? '0 0 20px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                                                        : '0 0 20px rgba(88, 166, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    e.currentTarget.style.transform = 'translateY(-2px)'
-                                                    e.currentTarget.style.boxShadow = selectedDevice?.id === device.id
-                                                        ? '0 0 30px rgba(16, 185, 129, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                                                        : '0 0 30px rgba(88, 166, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    e.currentTarget.style.transform = 'translateY(0)'
-                                                    e.currentTarget.style.boxShadow = selectedDevice?.id === device.id
-                                                        ? '0 0 20px rgba(16, 185, 129, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                                                        : '0 0 20px rgba(88, 166, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                                                }}
-                                            >
-                                                {selectedDevice?.id === device.id ? '✓ Selected' : 'Select Device'}
-                                            </button>
-                                        )}
                                     </div>
                                 </div>
                             </div>
