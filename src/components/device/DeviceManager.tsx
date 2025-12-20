@@ -313,7 +313,7 @@ export default function DeviceManager() {
                             </>
                         )}
                         <span style={{ position: 'relative', zIndex: 1 }}>
-                            Active
+                            Connected
                         </span>
                     </button>
 
@@ -390,7 +390,7 @@ export default function DeviceManager() {
                             </>
                         )}
                         <span style={{ position: 'relative', zIndex: 1 }}>
-                            Inactive
+                            Disconnected
                         </span>
                     </button>
                 </div>
