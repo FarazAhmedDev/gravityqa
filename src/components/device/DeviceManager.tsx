@@ -19,6 +19,7 @@ export default function DeviceManager() {
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [ws, setWs] = useState<WebSocket | null>(null)
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+    const [activeTab, setActiveTab] = useState<'connected' | 'disconnected'>('connected')
 
     // Track mouse for parallax
     useEffect(() => {
@@ -66,6 +67,10 @@ export default function DeviceManager() {
     }, [])
 
     const connectedCount = devices.filter(d => d.is_connected).length
+    const disconnectedCount = devices.filter(d => !d.is_connected).length
+    const filteredDevices = activeTab === 'connected'
+        ? devices.filter(d => d.is_connected)
+        : devices.filter(d => !d.is_connected)
 
     return (
         <div style={{
@@ -170,6 +175,168 @@ export default function DeviceManager() {
                     </p>
                 </div>
 
+                {/* Premium Tab Buttons */}
+                <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    marginBottom: '32px',
+                    animation: 'slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s backwards'
+                }}>
+                    <button
+                        onClick={() => setActiveTab('connected')}
+                        style={{
+                            position: 'relative',
+                            padding: '14px 28px',
+                            background: activeTab === 'connected'
+                                ? 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%)'
+                                : 'rgba(30, 35, 42, 0.6)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '12px',
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                            overflow: 'hidden',
+                            boxShadow: activeTab === 'connected'
+                                ? `0 1px 0 0 rgba(255,255,255,0.4) inset,
+                                   0 -1px 0 0 rgba(0,0,0,0.2) inset,
+                                   0 6px 20px -4px rgba(16,185,129,0.5),
+                                   0 12px 40px -8px rgba(16,185,129,0.3)`
+                                : 'none',
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'
+                            if (activeTab === 'connected') {
+                                e.currentTarget.style.boxShadow = `
+                                    0 1px 0 0 rgba(255,255,255,0.5) inset,
+                                    0 -1px 0 0 rgba(0,0,0,0.2) inset,
+                                    0 8px 28px -4px rgba(16,185,129,0.6),
+                                    0 16px 50px -8px rgba(16,185,129,0.4)
+                                `
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                            if (activeTab === 'connected') {
+                                e.currentTarget.style.boxShadow = `
+                                    0 1px 0 0 rgba(255,255,255,0.4) inset,
+                                    0 -1px 0 0 rgba(0,0,0,0.2) inset,
+                                    0 6px 20px -4px rgba(16,185,129,0.5),
+                                    0 12px 40px -8px rgba(16,185,129,0.3)
+                                `
+                            }
+                        }}
+                    >
+                        {activeTab === 'connected' && (
+                            <>
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: '50%',
+                                    background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.05) 100%)',
+                                    borderRadius: '12px 12px 0 0',
+                                    pointerEvents: 'none'
+                                }} />
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: '-100%',
+                                    width: '100%',
+                                    height: '100%',
+                                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                                    animation: 'shimmerGloss 3s infinite',
+                                    pointerEvents: 'none'
+                                }} />
+                            </>
+                        )}
+                        <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            🟢 Connected ({connectedCount})
+                        </span>
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('disconnected')}
+                        style={{
+                            position: 'relative',
+                            padding: '14px 28px',
+                            background: activeTab === 'disconnected'
+                                ? 'linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%)'
+                                : 'rgba(30, 35, 42, 0.6)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '12px',
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                            overflow: 'hidden',
+                            boxShadow: activeTab === 'disconnected'
+                                ? `0 1px 0 0 rgba(255,255,255,0.4) inset,
+                                   0 -1px 0 0 rgba(0,0,0,0.2) inset,
+                                   0 6px 20px -4px rgba(239,68,68,0.5),
+                                   0 12px 40px -8px rgba(239,68,68,0.3)`
+                                : 'none',
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'
+                            if (activeTab === 'disconnected') {
+                                e.currentTarget.style.boxShadow = `
+                                    0 1px 0 0 rgba(255,255,255,0.5) inset,
+                                    0 -1px 0 0 rgba(0,0,0,0.2) inset,
+                                    0 8px 28px -4px rgba(239,68,68,0.6),
+                                    0 16px 50px -8px rgba(239,68,68,0.4)
+                                `
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                            if (activeTab === 'disconnected') {
+                                e.currentTarget.style.boxShadow = `
+                                    0 1px 0 0 rgba(255,255,255,0.4) inset,
+                                    0 -1px 0 0 rgba(0,0,0,0.2) inset,
+                                    0 6px 20px -4px rgba(239,68,68,0.5),
+                                    0 12px 40px -8px rgba(239,68,68,0.3)
+                                `
+                            }
+                        }}
+                    >
+                        {activeTab === 'disconnected' && (
+                            <>
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: '50%',
+                                    background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.05) 100%)',
+                                    borderRadius: '12px 12px 0 0',
+                                    pointerEvents: 'none'
+                                }} />
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: '-100%',
+                                    width: '100%',
+                                    height: '100%',
+                                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                                    animation: 'shimmerGloss 3s infinite',
+                                    pointerEvents: 'none'
+                                }} />
+                            </>
+                        )}
+                        <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            🔴 Disconnected ({disconnectedCount})
+                        </span>
+                    </button>
+                </div>
+
                 {/* Premium Controls */}
                 <div style={{
                     display: 'flex',
@@ -256,13 +423,13 @@ export default function DeviceManager() {
                 </div>
 
                 {/* Mega-Premium Devices Grid */}
-                {devices.length > 0 ? (
+                {filteredDevices.length > 0 ? (
                     <div style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
                         gap: '28px'
                     }}>
-                        {devices.map((device, index) => (
+                        {filteredDevices.map((device, index) => (
                             <div
                                 key={device.id}
                                 onClick={() => device.is_connected && setSelectedDevice(device)}
@@ -791,6 +958,10 @@ export default function DeviceManager() {
                     0%, 100% { transform: translate(0, 0); }
                     33% { transform: translate(25px, 35px); }
                     66% { transform: translate(-35px, -25px); }
+                }
+                @keyframes shimmerGloss {
+                    0% { left: -100%; }
+                    50%, 100% { left: 200%; }
                 }
             `}</style>
         </div>
