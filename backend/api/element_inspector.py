@@ -53,15 +53,26 @@ def find_element_at_position(elem: ET.Element, x: int, y: int, current_path: Lis
             "x2": int(parts[2]),
             "y2": int(parts[3])
         }
-    except:
+    except Exception as e:
+        if depth < 3:
+            print(f"[Inspector]   {'  ' * depth}⚠️ Bounds parse error: {bounds_str} -> {e}")
         return None
     
-    # Debug log for root
+    # Debug log for root and first few levels
     if depth == 0:
-        print(f"[Inspector] 🎯 Search at ({x},{y}), root bounds: {bounds}")
+        print(f"[Inspector] 🎯 ROOT Search at ({x},{y}), root bounds: {bounds}")
+        print(f"[Inspector] Root element: {elem.tag}, class: {elem.get('class', 'N/A')}")
     
     # Check if point is within bounds
     in_bounds = bounds['x1'] <= x <= bounds['x2'] and bounds['y1'] <= y <= bounds['y2']
+    
+    # Log first few levels to see what's happening
+    if depth < 5:
+        class_name = elem.get('class', 'Unknown').split('.')[-1]
+        resource_id = elem.get('resource-id', '')
+        print(f"[Inspector]   {'  ' * depth}{'✓' if in_bounds else '✗'} D{depth} {class_name} {f'[{resource_id}]' if resource_id else ''}")
+        print(f"[Inspector]   {'  ' * depth}  Bounds: [{bounds['x1']},{bounds['y1']}][{bounds['x2']},{bounds['y2']}]")
+        print(f"[Inspector]   {'  ' * depth}  Point ({x},{y}) in bounds: {in_bounds}")
     
     if not in_bounds:
         return None
@@ -70,19 +81,29 @@ def find_element_at_position(elem: ET.Element, x: int, y: int, current_path: Lis
     class_name = elem.get('class', '').split('.')[-1]
     current_path.append(class_name)
     
+    if depth < 5:
+        print(f"[Inspector]   {'  ' * depth}→ Element CONTAINS point, checking children...")
+    
     # Check children to find deepest
     deepest = None
-    for child in elem:
+    child_count = len(list(elem))
+    
+    if depth < 5 and child_count > 0:
+        print(f"[Inspector]   {'  ' * depth}  Searching {child_count} children...")
+    
+    for i, child in enumerate(elem):
         result = find_element_at_position(child, x, y, current_path.copy(), depth + 1)
         if result:
             deepest = result  # Keep going to find THE deepest
+            if depth < 3:
+                print(f"[Inspector]   {'  ' * depth}  Child {i+1} matched!")
     
     # If no deeper child, this is it!
     if not deepest:
         element_data = element_to_dict(elem)
         element_data['hierarchy'] = current_path
         element_data['xpath'] = generate_xpath(elem)
-        print(f"[Inspector] ✅ Found: {class_name}, ID: {elem.get('resource-id', 'N/A')}")
+        print(f"[Inspector] ✅ FOUND DEEPEST: {class_name}, ID: {elem.get('resource-id', 'N/A')}, bounds: {bounds}")
         return element_data
     
     return deepest
