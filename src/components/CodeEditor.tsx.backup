@@ -648,6 +648,17 @@ export default function CodeEditor() {
                         {isRunning ? '⏳ Running...' : '▶️ Run Test'}
                     </button>
 
+                    <button onClick={() => window.history.back()} style={{
+                        background: colors.bgTertiary,
+                        color: colors.text,
+                        border: `1px solid ${colors.border}`,
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                    }}>
+                        ← Back
+                    </button>
                 </div>
             </div>
 
