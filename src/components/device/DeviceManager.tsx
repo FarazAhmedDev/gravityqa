@@ -337,13 +337,21 @@ export default function DeviceManager() {
                                     zIndex: 1
                                 }}>
                                     <div style={{
-                                        fontSize: '56px',
-                                        filter: 'drop-shadow(0 6px 20px rgba(0, 0, 0, 0.5))',
+                                        width: '56px',
+                                        height: '56px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        filter: 'drop-shadow(0 6px 20px rgba(88, 166, 255, 0.4))',
                                         animation: device.is_connected
                                             ? 'iconFloat 4s ease-in-out infinite, iconGlow 3s ease-in-out infinite'
                                             : 'none'
                                     }}>
-                                        {device.platform === 'android' ? '🤖' : '🍎'}
+                                        {/* Clean Phone Icon */}
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={device.is_connected ? '#58a6ff' : '#6e7681'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                                            <line x1="12" y1="18" x2="12.01" y2="18" />
+                                        </svg>
                                     </div>
                                     <div style={{ flex: 1 }}>
                                         <h3 style={{
