@@ -186,61 +186,6 @@ export default function DeviceManager() {
                     flexWrap: 'wrap',
                     animation: 'slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s backwards'
                 }}>
-                    {/* Refresh Button - Only on Connected Tab */}
-                    {activeTab === 'connected' && (
-                        <button
-                            onClick={fetchDevices}
-                            disabled={isRefreshing}
-                            style={{
-                                position: 'relative',
-                                padding: '14px 28px',
-                                background: isRefreshing
-                                    ? 'rgba(30, 35, 42, 0.8)'
-                                    : 'linear-gradient(135deg, #58a6ff 0%, #1f6feb 50%, #58a6ff 100%)',
-                                backgroundSize: '200% 100%',
-                                color: isRefreshing ? '#6e7681' : 'white',
-                                border: 'none',
-                                borderRadius: '12px',
-                                fontSize: '15px',
-                                fontWeight: 700,
-                                cursor: isRefreshing ? 'not-allowed' : 'pointer',
-                                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                                overflow: 'hidden',
-                                boxShadow: isRefreshing
-                                    ? 'none'
-                                    : '0 0 40px rgba(88, 166, 255, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                                animation: isRefreshing ? 'none' : 'buttonPulse 2s ease-in-out infinite',
-                                letterSpacing: '0.5px',
-                                textTransform: 'uppercase'
-                            }}
-                            onMouseEnter={(e) => {
-                                if (!isRefreshing) {
-                                    e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'
-                                    e.currentTarget.style.boxShadow = '0 0 60px rgba(88, 166, 255, 0.8), 0 15px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                                    e.currentTarget.style.backgroundPosition = '100% 0'
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (!isRefreshing) {
-                                    e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                                    e.currentTarget.style.boxShadow = '0 0 40px rgba(88, 166, 255, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                                    e.currentTarget.style.backgroundPosition = '0% 0'
-                                }
-                            }}
-                        >
-                            {isRefreshing ? (
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>🔄</span>
-                                    Scanning
-                                </span>
-                            ) : (
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    🔍 Refresh
-                                </span>
-                            )}
-                        </button>
-                    )}
-
                     {/* Connected Tab */}
                     <button
                         onClick={() => setActiveTab('connected')}
@@ -395,6 +340,61 @@ export default function DeviceManager() {
                             Disconnected
                         </span>
                     </button>
+
+                    {/* Refresh Button - Only on Connected Tab - RIGHT SIDE */}
+                    {activeTab === 'connected' && (
+                        <button
+                            onClick={fetchDevices}
+                            disabled={isRefreshing}
+                            style={{
+                                position: 'relative',
+                                padding: '14px 28px',
+                                background: isRefreshing
+                                    ? 'rgba(30, 35, 42, 0.8)'
+                                    : 'linear-gradient(135deg, #58a6ff 0%, #1f6feb 50%, #58a6ff 100%)',
+                                backgroundSize: '200% 100%',
+                                color: isRefreshing ? '#6e7681' : 'white',
+                                border: 'none',
+                                borderRadius: '12px',
+                                fontSize: '15px',
+                                fontWeight: 700,
+                                cursor: isRefreshing ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                overflow: 'hidden',
+                                boxShadow: isRefreshing
+                                    ? 'none'
+                                    : '0 0 40px rgba(88, 166, 255, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                                animation: isRefreshing ? 'none' : 'buttonPulse 2s ease-in-out infinite',
+                                letterSpacing: '0.5px',
+                                textTransform: 'uppercase'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (!isRefreshing) {
+                                    e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'
+                                    e.currentTarget.style.boxShadow = '0 0 60px rgba(88, 166, 255, 0.8), 0 15px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+                                    e.currentTarget.style.backgroundPosition = '100% 0'
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (!isRefreshing) {
+                                    e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                                    e.currentTarget.style.boxShadow = '0 0 40px rgba(88, 166, 255, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                    e.currentTarget.style.backgroundPosition = '0% 0'
+                                }
+                            }}
+                        >
+                            {isRefreshing ? (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>🔄</span>
+                                    Scanning
+                                </span>
+                            ) : (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    🔍 Refresh
+                                </span>
+                            )}
+                        </button>
+                    )}
                 </div>
 
                 {/* Mega-Premium Devices Grid */}
