@@ -20,6 +20,8 @@ export default function DeviceManager() {
     const [ws, setWs] = useState<WebSocket | null>(null)
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
     const [activeTab, setActiveTab] = useState<'connected' | 'disconnected'>('connected')
+    const [showDeviceDetails, setShowDeviceDetails] = useState(false)
+    const [detailsDevice, setDetailsDevice] = useState<Device | null>(null)
 
     // Track mouse for parallax
     useEffect(() => {
@@ -405,7 +407,11 @@ export default function DeviceManager() {
                         {filteredDevices.map((device, index) => (
                             <div
                                 key={device.id}
-                                onClick={() => device.is_connected && setSelectedDevice(device)}
+                                onClick={() => {
+                                    setDetailsDevice(device)
+                                    setShowDeviceDetails(true)
+                                    if (device.is_connected) setSelectedDevice(device)
+                                }}
                                 style={{
                                     position: 'relative',
                                     padding: '32px',
@@ -763,6 +769,250 @@ export default function DeviceManager() {
                     }}></div>
                     {ws?.readyState === WebSocket.OPEN ? 'Active' : 'Connecting...'}
                 </div>
+
+                {/* Premium Device Details Modal */}
+                {showDeviceDetails && detailsDevice && (
+                    <div
+                        onClick={() => setShowDeviceDetails(false)}
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(0, 0, 0, 0.85)',
+                            backdropFilter: 'blur(12px)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 9999,
+                            padding: '20px',
+                            animation: 'fadeIn 0.3s ease-out'
+                        }}
+                    >
+                        <div
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                position: 'relative',
+                                maxWidth: '650px',
+                                width: '100%',
+                                background: 'linear-gradient(135deg, rgba(22, 27, 34, 0.98), rgba(13, 17, 23, 0.98))',
+                                backdropFilter: 'blur(40px)',
+                                borderRadius: '32px',
+                                border: '2px solid',
+                                borderColor: detailsDevice.is_connected
+                                    ? 'rgba(63, 185, 80, 0.4)'
+                                    : 'rgba(248, 81, 73, 0.4)',
+                                padding: '48px',
+                                boxShadow: detailsDevice.is_connected
+                                    ? '0 0 80px rgba(63, 185, 80, 0.3), 0 40px 100px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                                    : '0 0 80px rgba(248, 81, 73, 0.3), 0 40px 100px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+                                animation: 'slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                overflow: 'auto',
+                                maxHeight: '90vh'
+                            }}
+                        >
+                            {/* Close Button */}
+                            <button
+                                onClick={() => setShowDeviceDetails(false)}
+                                style={{
+                                    position: 'absolute',
+                                    top: '24px',
+                                    right: '24px',
+                                    width: '44px',
+                                    height: '44px',
+                                    borderRadius: '12px',
+                                    background: 'rgba(248, 81, 73, 0.15)',
+                                    border: '1.5px solid rgba(248, 81, 73, 0.3)',
+                                    color: '#f85149',
+                                    fontSize: '24px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    transition: 'all 0.3s ease',
+                                    fontWeight: 700
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = 'rgba(248, 81, 73, 0.25)'
+                                    e.currentTarget.style.transform = 'rotate(90deg) scale(1.1)'
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'rgba(248, 81, 73, 0.15)'
+                                    e.currentTarget.style.transform = 'rotate(0deg) scale(1)'
+                                }}
+                            >
+                                ×
+                            </button>
+
+                            {/* Device Icon & Status */}
+                            <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+                                <div style={{
+                                    display: 'inline-block',
+                                    padding: '24px',
+                                    background: detailsDevice.is_connected
+                                        ? 'radial-gradient(circle, rgba(63, 185, 80, 0.2), transparent)'
+                                        : 'radial-gradient(circle, rgba(248, 81, 73, 0.2), transparent)',
+                                    borderRadius: '24px',
+                                    marginBottom: '20px'
+                                }}>
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        width="80"
+                                        height="80"
+                                        fill="none"
+                                        stroke={detailsDevice.is_connected ? '#3fb950' : '#f85149'}
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        style={{
+                                            filter: detailsDevice.is_connected
+                                                ? 'drop-shadow(0 0 20px rgba(63, 185, 80, 0.6))'
+                                                : 'drop-shadow(0 0 20px rgba(248, 81, 73, 0.6))'
+                                        }}
+                                    >
+                                        <rect x="5" y="2" width="14" height="20" rx="2" />
+                                        <line x1="12" y1="18" x2="12" y2="18" />
+                                    </svg>
+                                </div>
+
+                                <h2 style={{
+                                    fontSize: '32px',
+                                    fontWeight: 900,
+                                    background: detailsDevice.is_connected
+                                        ? 'linear-gradient(135deg, #ffffff, #3fb950)'
+                                        : 'linear-gradient(135deg, #ffffff, #f85149)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    marginBottom: '12px',
+                                    letterSpacing: '-1px'
+                                }}>
+                                    {detailsDevice.name}
+                                </h2>
+
+                                <div style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    padding: '10px 20px',
+                                    background: detailsDevice.is_connected
+                                        ? 'rgba(63, 185, 80, 0.15)'
+                                        : 'rgba(248, 81, 73, 0.15)',
+                                    borderRadius: '12px',
+                                    border: '1.5px solid',
+                                    borderColor: detailsDevice.is_connected
+                                        ? 'rgba(63, 185, 80, 0.3)'
+                                        : 'rgba(248, 81, 73, 0.3)'
+                                }}>
+                                    <div style={{
+                                        width: '10px',
+                                        height: '10px',
+                                        borderRadius: '50%',
+                                        background: detailsDevice.is_connected ? '#3fb950' : '#f85149',
+                                        boxShadow: detailsDevice.is_connected
+                                            ? '0 0 10px rgba(63, 185, 80, 1)'
+                                            : '0 0 10px rgba(248, 81, 73, 1)',
+                                        animation: detailsDevice.is_connected ? 'statusPulse 2s ease-in-out infinite' : 'none'
+                                    }}></div>
+                                    <span style={{
+                                        fontSize: '14px',
+                                        color: detailsDevice.is_connected ? '#3fb950' : '#f85149',
+                                        fontWeight: 900,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px'
+                                    }}>
+                                        {detailsDevice.is_connected ? 'Online' : 'Offline'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Device Details Grid */}
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: '20px',
+                                marginBottom: '32px'
+                            }}>
+                                {[
+                                    { label: 'Device ID', value: detailsDevice.device_id },
+                                    { label: 'Platform', value: detailsDevice.platform },
+                                    { label: 'OS Version', value: detailsDevice.platform_version || 'N/A' },
+                                    { label: 'Type', value: detailsDevice.device_type },
+                                    { label: 'Manufacturer', value: detailsDevice.manufacturer || 'N/A' },
+                                    { label: 'Model', value: detailsDevice.model || 'N/A' }
+                                ].map((item, idx) => (
+                                    <div
+                                        key={idx}
+                                        style={{
+                                            padding: '20px',
+                                            background: 'rgba(22, 27, 34, 0.6)',
+                                            borderRadius: '16px',
+                                            border: '1px solid rgba(48, 54, 61, 0.5)',
+                                            animation: `slideInLeft 0.4s ease-out ${idx * 0.05}s backwards`
+                                        }}
+                                    >
+                                        <div style={{
+                                            fontSize: '12px',
+                                            color: '#8b949e',
+                                            fontWeight: 700,
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '1px',
+                                            marginBottom: '8px'
+                                        }}>
+                                            {item.label}
+                                        </div>
+                                        <div style={{
+                                            fontSize: '16px',
+                                            color: '#e6edf3',
+                                            fontWeight: 800,
+                                            wordBreak: 'break-all'
+                                        }}>
+                                            {item.value}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Action Button */}
+                            {detailsDevice.is_connected && (
+                                <button
+                                    onClick={() => {
+                                        setSelectedDevice(detailsDevice)
+                                        setShowDeviceDetails(false)
+                                    }}
+                                    style={{
+                                        width: '100%',
+                                        padding: '18px',
+                                        background: 'linear-gradient(135deg, #58a6ff 0%, #1f6feb 50%, #58a6ff 100%)',
+                                        backgroundSize: '200% 100%',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '16px',
+                                        fontSize: '16px',
+                                        fontWeight: 800,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.4s ease',
+                                        boxShadow: '0 0 40px rgba(88, 166, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(-2px)'
+                                        e.currentTarget.style.boxShadow = '0 0 60px rgba(88, 166, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+                                        e.currentTarget.style.backgroundPosition = '100% 0'
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'translateY(0)'
+                                        e.currentTarget.style.boxShadow = '0 0 40px rgba(88, 166, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                        e.currentTarget.style.backgroundPosition = '0% 0'
+                                    }}
+                                >
+                                    ✓ Select Device
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* CSS Animations - THE MOST! */}
