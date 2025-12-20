@@ -686,7 +686,6 @@ export default function DeviceManager() {
                         <div style={{
                             maxWidth: '700px',
                             width: '100%',
-                            maxHeight: '600px',
                             padding: '40px',
                             background: 'linear-gradient(135deg, rgba(22, 27, 34, 0.7), rgba(22, 27, 34, 0.5))',
                             backdropFilter: 'blur(30px)',
@@ -694,8 +693,7 @@ export default function DeviceManager() {
                             border: '2px solid rgba(48, 54, 61, 0.5)',
                             textAlign: 'left',
                             boxShadow: '0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
-                            animation: 'slideUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s backwards',
-                            overflow: 'auto'
+                            animation: 'slideUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s backwards'
                         }}>
                             <h4 style={{
                                 fontSize: '20px',
