@@ -497,8 +497,11 @@ export default function DeviceManager() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         minHeight: '500px',
+                        maxHeight: 'calc(100vh - 200px)',
                         textAlign: 'center',
-                        animation: 'fadeIn 1s ease-out'
+                        animation: 'fadeIn 1s ease-out',
+                        overflow: 'auto',
+                        padding: '20px'
                     }}>
                         <div style={{
                             fontSize: '120px',
@@ -533,7 +536,9 @@ export default function DeviceManager() {
                         </p>
 
                         <div style={{
-                            maxWidth: '600px',
+                            maxWidth: '700px',
+                            width: '100%',
+                            maxHeight: '600px',
                             padding: '40px',
                             background: 'linear-gradient(135deg, rgba(22, 27, 34, 0.7), rgba(22, 27, 34, 0.5))',
                             backdropFilter: 'blur(30px)',
@@ -541,7 +546,8 @@ export default function DeviceManager() {
                             border: '2px solid rgba(48, 54, 61, 0.5)',
                             textAlign: 'left',
                             boxShadow: '0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
-                            animation: 'slideUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s backwards'
+                            animation: 'slideUp 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s backwards',
+                            overflow: 'auto'
                         }}>
                             <h4 style={{
                                 fontSize: '20px',
@@ -558,7 +564,8 @@ export default function DeviceManager() {
                                 color: '#8b949e',
                                 lineHeight: '2.4',
                                 paddingLeft: '28px',
-                                fontWeight: 600
+                                fontWeight: 600,
+                                marginBottom: 0
                             }}>
                                 <li style={{ animation: 'slideInLeft 0.6s ease-out 0.4s backwards' }}>
                                     Enable <strong style={{ color: '#e6edf3' }}>USB Debugging</strong> on device
