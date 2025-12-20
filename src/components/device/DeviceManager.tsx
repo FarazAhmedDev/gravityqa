@@ -175,13 +175,69 @@ export default function DeviceManager() {
                     </p>
                 </div>
 
-                {/* Premium Tab Buttons */}
+                {/* Premium Controls - All in One Row */}
                 <div style={{
                     display: 'flex',
                     gap: '12px',
-                    marginBottom: '32px',
+                    marginBottom: '40px',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
                     animation: 'slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s backwards'
                 }}>
+                    {/* Refresh Button */}
+                    <button
+                        onClick={fetchDevices}
+                        disabled={isRefreshing}
+                        style={{
+                            position: 'relative',
+                            padding: '14px 28px',
+                            background: isRefreshing
+                                ? 'rgba(30, 35, 42, 0.8)'
+                                : 'linear-gradient(135deg, #58a6ff 0%, #1f6feb 50%, #58a6ff 100%)',
+                            backgroundSize: '200% 100%',
+                            color: isRefreshing ? '#6e7681' : 'white',
+                            border: 'none',
+                            borderRadius: '12px',
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            cursor: isRefreshing ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                            overflow: 'hidden',
+                            boxShadow: isRefreshing
+                                ? 'none'
+                                : '0 0 40px rgba(88, 166, 255, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                            animation: isRefreshing ? 'none' : 'buttonPulse 2s ease-in-out infinite',
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!isRefreshing) {
+                                e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'
+                                e.currentTarget.style.boxShadow = '0 0 60px rgba(88, 166, 255, 0.8), 0 15px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+                                e.currentTarget.style.backgroundPosition = '100% 0'
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!isRefreshing) {
+                                e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                                e.currentTarget.style.boxShadow = '0 0 40px rgba(88, 166, 255, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                e.currentTarget.style.backgroundPosition = '0% 0'
+                            }
+                        }}
+                    >
+                        {isRefreshing ? (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>🔄</span>
+                                Scanning
+                            </span>
+                        ) : (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                🔍 Refresh
+                            </span>
+                        )}
+                    </button>
+
+                    {/* Connected Tab */}
                     <button
                         onClick={() => setActiveTab('connected')}
                         style={{
@@ -335,91 +391,6 @@ export default function DeviceManager() {
                             🔴 Disconnected ({disconnectedCount})
                         </span>
                     </button>
-                </div>
-
-                {/* Premium Controls */}
-                <div style={{
-                    display: 'flex',
-                    gap: '16px',
-                    marginBottom: '40px',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    animation: 'slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s backwards'
-                }}>
-                    <button
-                        onClick={fetchDevices}
-                        disabled={isRefreshing}
-                        style={{
-                            position: 'relative',
-                            padding: '16px 36px',
-                            background: isRefreshing
-                                ? 'rgba(30, 35, 42, 0.8)'
-                                : 'linear-gradient(135deg, #58a6ff 0%, #1f6feb 50%, #58a6ff 100%)',
-                            backgroundSize: '200% 100%',
-                            color: isRefreshing ? '#6e7681' : 'white',
-                            border: 'none',
-                            borderRadius: '14px',
-                            fontSize: '16px',
-                            fontWeight: 800,
-                            cursor: isRefreshing ? 'not-allowed' : 'pointer',
-                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                            boxShadow: isRefreshing
-                                ? 'none'
-                                : '0 0 40px rgba(88, 166, 255, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                            animation: isRefreshing ? 'none' : 'buttonPulse 2s ease-in-out infinite'
-                        }}
-                        onMouseEnter={(e) => {
-                            if (!isRefreshing) {
-                                e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)'
-                                e.currentTarget.style.boxShadow = '0 0 60px rgba(88, 166, 255, 0.8), 0 15px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                                e.currentTarget.style.backgroundPosition = '100% 0'
-                            }
-                        }}
-                        onMouseLeave={(e) => {
-                            if (!isRefreshing) {
-                                e.currentTarget.style.transform = 'translateY(0) scale(1)'
-                                e.currentTarget.style.boxShadow = '0 0 40px rgba(88, 166, 255, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-                                e.currentTarget.style.backgroundPosition = '0% 0'
-                            }
-                        }}
-                    >
-                        {isRefreshing ? (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>🔄</span>
-                                Scanning...
-                            </span>
-                        ) : (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                🔍 Refresh Devices
-                            </span>
-                        )}
-                    </button>
-
-                    {selectedDevice && (
-                        <div style={{
-                            padding: '16px 28px',
-                            background: 'linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(139, 92, 246, 0.15))',
-                            backdropFilter: 'blur(20px)',
-                            borderRadius: '14px',
-                            border: '1.5px solid rgba(88, 166, 255, 0.3)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            boxShadow: '0 10px 40px rgba(88, 166, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                            animation: 'slideInRight 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                        }}>
-                            <span style={{ fontSize: '15px', color: '#8b949e', fontWeight: 700 }}>Selected:</span>
-                            <span style={{
-                                fontSize: '16px',
-                                background: 'linear-gradient(135deg, #58a6ff, #a78bfa)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                fontWeight: 800
-                            }}>
-                                {selectedDevice.name}
-                            </span>
-                        </div>
-                    )}
                 </div>
 
                 {/* Mega-Premium Devices Grid */}
