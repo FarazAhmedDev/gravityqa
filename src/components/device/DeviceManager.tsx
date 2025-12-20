@@ -312,8 +312,8 @@ export default function DeviceManager() {
                                 }} />
                             </>
                         )}
-                        <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            🟢 Connected ({connectedCount})
+                        <span style={{ position: 'relative', zIndex: 1 }}>
+                            Connected
                         </span>
                     </button>
 
@@ -389,8 +389,8 @@ export default function DeviceManager() {
                                 }} />
                             </>
                         )}
-                        <span style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            🔴 Disconnected ({disconnectedCount})
+                        <span style={{ position: 'relative', zIndex: 1 }}>
+                            Disconnected
                         </span>
                     </button>
                 </div>
