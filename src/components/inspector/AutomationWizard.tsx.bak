@@ -339,12 +339,7 @@ export default function AutomationWizard() {
 
     // INSPECTOR MODE HANDLERS
     const handleInspectorHover = async (e: React.MouseEvent<HTMLImageElement>) => {
-        console.log("[Inspector] 🎯 HOVER EVENT! recordingMode:", recordingMode);
-        
-        if (recordingMode !== 'inspector') {
-            console.log("[Inspector] ❌ Not inspector mode, returning");
-            return;
-        }
+        if (recordingMode !== 'inspector') return
 
         // Throttle API calls - only call every 100ms for better responsiveness
         const now = Date.now()
