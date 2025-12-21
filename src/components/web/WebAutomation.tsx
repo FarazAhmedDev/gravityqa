@@ -201,6 +201,18 @@ export default function WebAutomation() {
         }
     }
 
+    const handleWait = async (seconds: number) => {
+        if (!isRecording) return
+        try {
+            await axios.post('http://localhost:8000/api/web/action/wait', {
+                seconds: seconds
+            })
+            console.log(`Wait ${seconds}s added to recording`)
+        } catch (error) {
+            console.error('Wait action failed:', error)
+        }
+    }
+
     useEffect(() => {
         if (browserLaunched && !isLoading && currentUrl) {
             const interval = setInterval(() => {
@@ -210,14 +222,14 @@ export default function WebAutomation() {
         }
     }, [browserLaunched, isLoading, currentUrl])
 
-    // Generate particles for background
+    // Generate particles for background (slower, smoother)
     const particles = Array.from({ length: 25 }, (_, i) => ({
         id: i,
         size: Math.random() * 4 + 2,
         x: Math.random() * 100,
         y: Math.random() * 100,
-        delay: Math.random() * 5,
-        duration: Math.random() * 10 + 15
+        delay: Math.random() * 8,
+        duration: Math.random() * 20 + 25  // Slower: 25-45s instead of 15-25s
     }))
 
     return (
@@ -936,6 +948,7 @@ export default function WebAutomation() {
                         onStartRecording={startRecording}
                         onStopRecording={stopRecording}
                         onPlay={playActions}
+                        onWait={handleWait}
                         hasActions={actions.length > 0}
                     />
                     <ActionsList

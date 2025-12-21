@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 interface ControlPanelProps {
     browserLaunched: boolean
     isRecording: boolean
@@ -5,6 +7,7 @@ interface ControlPanelProps {
     onStartRecording: () => void
     onStopRecording: () => void
     onPlay: () => void
+    onWait: (seconds: number) => void
     hasActions: boolean
 }
 
@@ -15,8 +18,10 @@ export default function ControlPanel({
     onStartRecording,
     onStopRecording,
     onPlay,
+    onWait,
     hasActions
 }: ControlPanelProps) {
+    const [waitTime, setWaitTime] = useState(3)
     const colors = {
         bgSecondary: '#161b22',
         bgTertiary: '#21262d',
@@ -224,6 +229,85 @@ export default function ControlPanel({
                     <span style={{ fontSize: '18px' }}>▶</span>
                     {isLoading ? 'Playing...' : 'Play Actions'}
                 </button>
+
+                {/* Wait/Sleep Button */}
+                <div style={{
+                    display: 'flex',
+                    gap: '10px',
+                    alignItems: 'center'
+                }}>
+                    <input
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={waitTime}
+                        onChange={(e) => setWaitTime(Number(e.target.value))}
+                        style={{
+                            width: '70px',
+                            background: colors.bgTertiary,
+                            border: `2px solid ${colors.border}`,
+                            borderRadius: '10px',
+                            padding: '12px',
+                            color: colors.text,
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            textAlign: 'center',
+                            outline: 'none',
+                            transition: 'all 0.3s ease'
+                        }}
+                        onFocus={(e) => {
+                            e.target.style.borderColor = colors.primary
+                            e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`
+                        }}
+                        onBlur={(e) => {
+                            e.target.style.borderColor = colors.border
+                            e.target.style.boxShadow = 'none'
+                        }}
+                    />
+                    <button
+                        onClick={() => onWait(waitTime)}
+                        disabled={!browserLaunched || !isRecording}
+                        style={{
+                            flex: 1,
+                            position: 'relative',
+                            background: (!browserLaunched || !isRecording)
+                                ? colors.bgTertiary
+                                : 'linear-gradient(135deg, #a78bfa, #8b5cf6)',
+                            color: 'white',
+                            border: 'none',
+                            padding: '16px 24px',
+                            borderRadius: '12px',
+                            fontWeight: 700,
+                            fontSize: '15px',
+                            cursor: (!browserLaunched || !isRecording) ? 'not-allowed' : 'pointer',
+                            opacity: (!browserLaunched || !isRecording) ? 0.4 : 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            boxShadow: (!browserLaunched || !isRecording)
+                                ? 'none'
+                                : '0 4px 20px #a78bfa40, inset 0 1px 0 rgba(255,255,255,0.2)',
+                            transition: 'all 0.3s ease',
+                            overflow: 'hidden'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (browserLaunched && isRecording) {
+                                e.currentTarget.style.transform = 'translateY(-2px)'
+                                e.currentTarget.style.boxShadow = '0 6px 30px #a78bfa60'
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (browserLaunched && isRecording) {
+                                e.currentTarget.style.transform = 'translateY(0)'
+                                e.currentTarget.style.boxShadow = '0 4px 20px #a78bfa40'
+                            }
+                        }}
+                    >
+                        <span style={{ fontSize: '18px' }}>⏱️</span>
+                        Wait {waitTime}s
+                    </button>
+                </div>
             </div>
 
             <style>{`

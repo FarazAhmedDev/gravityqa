@@ -143,6 +143,29 @@ async def scroll_page(request: Dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/action/wait")
+async def wait_action(request: Dict):
+    """Add wait/sleep action"""
+    try:
+        seconds = request.get('seconds', 3)
+        
+        if playwright_controller.recording:
+            # Add to recorded actions
+            playwright_controller.record_action('wait', data={'seconds': seconds})
+            
+            return {
+                "success": True,
+                "message": f"Wait {seconds}s added to recording"
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Not recording"
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/playback/start")
 async def start_playback(request: Dict):
     """Replay recorded actions"""
