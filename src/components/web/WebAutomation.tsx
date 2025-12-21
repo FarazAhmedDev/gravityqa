@@ -22,6 +22,8 @@ export default function WebAutomation() {
     const [actions, setActions] = useState<WebAction[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [pageTitle, setPageTitle] = useState('')
+    const [navigationProgress, setNavigationProgress] = useState(0)
+    const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
 
     const colors = {
         bg: '#0d1117',
@@ -32,44 +34,78 @@ export default function WebAutomation() {
         textSecondary: '#7d8590',
         primary: '#f97316',
         success: '#3fb950',
-        error: '#f85149'
+        error: '#f85149',
+        blue: '#58a6ff'
     }
 
     const launchBrowser = async () => {
         try {
             setIsLoading(true)
+            setNavigationProgress(20)
+
             const res = await axios.post('http://localhost:8000/api/web/browser/launch', {
                 headless: false
             })
+
+            setNavigationProgress(100)
+
             if (res.data.success) {
                 setBrowserLaunched(true)
-                console.log('Browser launched successfully')
+                setShowSuccessAnimation(true)
+                setTimeout(() => setShowSuccessAnimation(false), 2000)
             }
         } catch (error) {
             console.error('Failed to launch browser:', error)
             alert('Failed to launch browser')
         } finally {
-            setIsLoading(false)
+            setTimeout(() => {
+                setIsLoading(false)
+                setNavigationProgress(0)
+            }, 500)
         }
     }
 
     const navigateToUrl = async () => {
+        if (!url.trim()) return
+
         try {
             setIsLoading(true)
+            setNavigationProgress(0)
+
+            // Animate progress
+            const progressInterval = setInterval(() => {
+                setNavigationProgress(prev => {
+                    if (prev >= 90) return prev
+                    return prev + 10
+                })
+            }, 100)
+
             const res = await axios.post('http://localhost:8000/api/web/browser/navigate', {
                 url: url
             })
+
+            clearInterval(progressInterval)
+            setNavigationProgress(95)
+
             if (res.data.success) {
                 setCurrentUrl(res.data.url)
                 setPageTitle(res.data.title || '')
-                // Get screenshot after navigation
+
+                // Get screenshot
                 await updateScreenshot()
+
+                setNavigationProgress(100)
+                setShowSuccessAnimation(true)
+                setTimeout(() => setShowSuccessAnimation(false), 2000)
             }
         } catch (error) {
             console.error('Navigation failed:', error)
             alert('Navigation failed')
         } finally {
-            setIsLoading(false)
+            setTimeout(() => {
+                setIsLoading(false)
+                setNavigationProgress(0)
+            }, 500)
         }
     }
 
@@ -101,7 +137,6 @@ export default function WebAutomation() {
             const res = await axios.post('http://localhost:8000/api/web/record/stop')
             if (res.data.success) {
                 setIsRecording(false)
-                // Get recorded actions
                 await loadActions()
             }
         } catch (error) {
@@ -127,7 +162,6 @@ export default function WebAutomation() {
                 actions: actions
             })
             if (res.data.success) {
-                console.log('Playback completed')
                 await updateScreenshot()
             }
         } catch (error) {
@@ -146,92 +180,234 @@ export default function WebAutomation() {
             setCurrentUrl('')
             setActions([])
             setIsRecording(false)
+            setPageTitle('')
         } catch (error) {
             console.error('Close browser failed:', error)
         }
     }
 
-    // Auto-update screenshot periodically when browser is active
+    // Auto-update screenshot
     useEffect(() => {
-        if (browserLaunched && !isLoading) {
+        if (browserLaunched && !isLoading && currentUrl) {
             const interval = setInterval(() => {
                 updateScreenshot()
-            }, 2000) // Update every 2 seconds
+            }, 2000)
             return () => clearInterval(interval)
         }
-    }, [browserLaunched, isLoading])
+    }, [browserLaunched, isLoading, currentUrl])
 
     return (
         <div style={{
-            background: colors.bg,
+            background: `linear-gradient(135deg, ${colors.bg} 0%, #0a0e14 100%)`,
             minHeight: '100vh',
             color: colors.text,
-            padding: '24px'
+            padding: '32px',
+            position: 'relative',
+            overflow: 'hidden'
         }}>
-            {/* Header */}
+            {/* Animated background particles */}
             <div style={{
-                marginBottom: '24px',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: `radial-gradient(circle at 20% 50%, ${colors.primary}08 0%, transparent 50%),
+                             radial-gradient(circle at 80% 80%, ${colors.blue}08 0%, transparent 50%)`,
+                animation: 'float 20s ease-in-out infinite',
+                pointerEvents: 'none'
+            }} />
+
+            {/* Header with premium styling */}
+            <div style={{
+                marginBottom: '32px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '16px'
+                gap: '20px',
+                position: 'relative',
+                zIndex: 1
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '32px' }}>🌐</span>
-                    <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 700 }}>
-                        Web Automation
-                    </h1>
-                </div>
                 <div style={{
-                    padding: '6px 12px',
-                    background: browserLaunched ? colors.success : colors.textSecondary,
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: 600
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    background: `linear-gradient(135deg, ${colors.bgSecondary}cc, ${colors.bgTertiary}cc)`,
+                    backdropFilter: 'blur(20px)',
+                    padding: '16px 28px',
+                    borderRadius: '16px',
+                    border: `1px solid ${colors.border}`,
+                    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 
+                                inset 0 1px 0 rgba(255, 255, 255, 0.05)`
                 }}>
-                    {browserLaunched ? '● BROWSER ACTIVE' : '○ NOT CONNECTED'}
+                    <div style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '14px',
+                        background: `linear-gradient(135deg, ${colors.primary}, ${colors.primary}dd)`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '32px',
+                        boxShadow: `0 0 30px ${colors.primary}40`,
+                        animation: browserLaunched ? 'pulse 3s ease-in-out infinite' : 'none'
+                    }}>
+                        🌐
+                    </div>
+                    <div>
+                        <h1 style={{
+                            margin: 0,
+                            fontSize: '32px',
+                            fontWeight: 800,
+                            background: `linear-gradient(135deg, ${colors.text}, ${colors.textSecondary})`,
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            letterSpacing: '-0.5px'
+                        }}>
+                            Web Automation
+                        </h1>
+                        <p style={{
+                            margin: '4px 0 0 0',
+                            fontSize: '13px',
+                            color: colors.textSecondary,
+                            fontWeight: 500
+                        }}>
+                            Powered by Playwright
+                        </p>
+                    </div>
                 </div>
+
+                {/* Status Badge */}
+                <div style={{
+                    padding: '12px 20px',
+                    background: browserLaunched
+                        ? `linear-gradient(135deg, ${colors.success}20, ${colors.success}10)`
+                        : `${colors.textSecondary}20`,
+                    border: `2px solid ${browserLaunched ? colors.success : colors.textSecondary}`,
+                    borderRadius: '12px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: browserLaunched ? `0 0 20px ${colors.success}30` : 'none',
+                    animation: browserLaunched ? 'slideIn 0.5s ease-out' : 'none'
+                }}>
+                    <span style={{
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        background: browserLaunched ? colors.success : colors.textSecondary,
+                        boxShadow: browserLaunched ? `0 0 10px ${colors.success}` : 'none',
+                        animation: browserLaunched ? 'ping 2s ease-in-out infinite' : 'none'
+                    }} />
+                    {browserLaunched ? 'BROWSER ACTIVE' : 'NOT CONNECTED'}
+                </div>
+
+                {showSuccessAnimation && (
+                    <div style={{
+                        position: 'absolute',
+                        right: 0,
+                        fontSize: '48px',
+                        animation: 'successPop 2s ease-out forwards'
+                    }}>
+                        ✨
+                    </div>
+                )}
             </div>
 
-            {/* URL Bar */}
+            {/* Premium Browser Address Bar */}
             <div style={{
-                background: colors.bgSecondary,
+                background: `linear-gradient(135deg, ${colors.bgSecondary}dd, ${colors.bgTertiary}dd)`,
+                backdropFilter: 'blur(30px)',
                 border: `1px solid ${colors.border}`,
-                borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '16px'
+                borderRadius: '16px',
+                padding: '24px',
+                marginBottom: '24px',
+                boxShadow: `0 12px 40px rgba(0, 0, 0, 0.5), 
+                            inset 0 1px 0 rgba(255, 255, 255, 0.08)`,
+                position: 'relative',
+                zIndex: 1,
+                overflow: 'hidden'
             }}>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                {/* Progress bar */}
+                {navigationProgress > 0 && (
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        height: '3px',
+                        width: `${navigationProgress}%`,
+                        background: `linear-gradient(90deg, ${colors.primary}, ${colors.blue})`,
+                        transition: 'width 0.3s ease-out',
+                        boxShadow: `0 0 10px ${colors.primary}`
+                    }} />
+                )}
+
+                {/* URL Bar */}
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
+                    {/* Lock Icon */}
+                    <div style={{
+                        padding: '12px',
+                        background: `${colors.success}15`,
+                        borderRadius: '10px',
+                        border: `1px solid ${colors.success}30`
+                    }}>
+                        <span style={{ fontSize: '18px' }}>🔒</span>
+                    </div>
+
+                    {/* URL Input */}
                     <input
                         type="text"
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && navigateToUrl()}
-                        placeholder="Enter URL (e.g., https://example.com)"
+                        onKeyPress={(e) => e.key === 'Enter' && browserLaunched && navigateToUrl()}
+                        placeholder="Enter website URL..."
                         disabled={!browserLaunched}
                         style={{
                             flex: 1,
                             background: colors.bgTertiary,
-                            border: `1px solid ${colors.border}`,
-                            borderRadius: '8px',
-                            padding: '12px 16px',
+                            border: `2px solid ${colors.border}`,
+                            borderRadius: '12px',
+                            padding: '14px 20px',
                             color: colors.text,
-                            fontSize: '14px'
+                            fontSize: '15px',
+                            fontWeight: 500,
+                            transition: 'all 0.3s ease',
+                            outline: 'none'
+                        }}
+                        onFocus={(e) => {
+                            e.target.style.borderColor = colors.primary
+                            e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`
+                        }}
+                        onBlur={(e) => {
+                            e.target.style.borderColor = colors.border
+                            e.target.style.boxShadow = 'none'
                         }}
                     />
+
+                    {/* Action Buttons */}
                     {!browserLaunched ? (
                         <button
                             onClick={launchBrowser}
                             disabled={isLoading}
                             style={{
+                                position: 'relative',
                                 background: 'linear-gradient(135deg, #3fb950 0%, #2ea043 50%, #238636 100%)',
                                 color: 'white',
                                 border: 'none',
-                                padding: '12px 24px',
-                                borderRadius: '8px',
-                                fontWeight: 600,
+                                padding: '14px 32px',
+                                borderRadius: '12px',
+                                fontWeight: 700,
+                                fontSize: '15px',
                                 cursor: isLoading ? 'not-allowed' : 'pointer',
-                                opacity: isLoading ? 0.5 : 1
+                                opacity: isLoading ? 0.7 : 1,
+                                boxShadow: `0 4px 20px ${colors.success}40, inset 0 1px 0 rgba(255,255,255,0.3)`,
+                                transition: 'all 0.3s ease',
+                                overflow: 'hidden'
                             }}
+                            onMouseEnter={(e) => !isLoading && (e.currentTarget.style.transform = 'translateY(-2px)', e.currentTarget.style.boxShadow = `0 8px 30px ${colors.success}60`)}
+                            onMouseLeave={(e) => !isLoading && (e.currentTarget.style.transform = 'translateY(0)', e.currentTarget.style.boxShadow = `0 4px 20px ${colors.success}40`)}
                         >
                             {isLoading ? '⏳ Launching...' : '🚀 Launch Browser'}
                         </button>
@@ -241,74 +417,115 @@ export default function WebAutomation() {
                                 onClick={navigateToUrl}
                                 disabled={isLoading}
                                 style={{
-                                    background: colors.primary,
+                                    position: 'relative',
+                                    background: `linear-gradient(135deg, ${colors.primary}, ${colors.primary}dd)`,
                                     color: 'white',
                                     border: 'none',
-                                    padding: '12px 24px',
-                                    borderRadius: '8px',
-                                    fontWeight: 600,
-                                    cursor: isLoading ? 'not-allowed' : 'pointer'
+                                    padding: '14px 28px',
+                                    borderRadius: '12px',
+                                    fontWeight: 700,
+                                    fontSize: '15px',
+                                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                                    boxShadow: `0 4px 20px ${colors.primary}40`,
+                                    transition: 'all 0.3s ease'
                                 }}
+                                onMouseEnter={(e) => !isLoading && (e.currentTarget.style.transform = 'scale(1.05)', e.currentTarget.style.boxShadow = `0 6px 25px ${colors.primary}60`)}
+                                onMouseLeave={(e) => !isLoading && (e.currentTarget.style.transform = 'scale(1)', e.currentTarget.style.boxShadow = `0 4px 20px ${colors.primary}40`)}
                             >
-                                Go
+                                {isLoading ? '⏳' : '→'} Go
                             </button>
                             <button
                                 onClick={closeBrowser}
                                 style={{
-                                    background: colors.error,
+                                    background: `linear-gradient(135deg, ${colors.error}, ${colors.error}dd)`,
                                     color: 'white',
                                     border: 'none',
-                                    padding: '12px 24px',
-                                    borderRadius: '8px',
-                                    fontWeight: 600,
-                                    cursor: 'pointer'
+                                    padding: '14px 24px',
+                                    borderRadius: '12px',
+                                    fontWeight: 700,
+                                    fontSize: '15px',
+                                    cursor: 'pointer',
+                                    boxShadow: `0 4px 20px ${colors.error}40`,
+                                    transition: 'all 0.3s ease'
                                 }}
+                                onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)', e.currentTarget.style.boxShadow = `0 6px 25px ${colors.error}60`)}
+                                onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)', e.currentTarget.style.boxShadow = `0 4px 20px ${colors.error}40`)}
                             >
-                                Close
+                                ✕
                             </button>
                         </>
                     )}
                 </div>
 
-                {/* Inspector Toggle */}
+                {/* Inspector & Page Info */}
                 {browserLaunched && (
-                    <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '16px',
+                        animation: 'slideIn 0.5s ease-out'
+                    }}>
+                        <label style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            cursor: 'pointer',
+                            padding: '8px 16px',
+                            background: inspectorMode ? `${colors.primary}15` : 'transparent',
+                            borderRadius: '10px',
+                            border: `2px solid ${inspectorMode ? colors.primary : 'transparent'}`,
+                            transition: 'all 0.3s ease'
+                        }}>
                             <input
                                 type="checkbox"
                                 checked={inspectorMode}
                                 onChange={(e) => setInspectorMode(e.target.checked)}
+                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                             />
-                            <span style={{ fontSize: '14px', fontWeight: 500 }}>
+                            <span style={{ fontSize: '14px', fontWeight: 600 }}>
                                 🔍 Inspector Mode
                             </span>
                         </label>
                         {pageTitle && (
-                            <span style={{
-                                color: colors.textSecondary,
-                                fontSize: '13px',
-                                marginLeft: 'auto'
+                            <div style={{
+                                flex: 1,
+                                padding: '8px 16px',
+                                background: `${colors.blue}10`,
+                                borderRadius: '10px',
+                                border: `1px solid ${colors.blue}30`,
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                color: colors.blue,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
                             }}>
-                                {pageTitle}
-                            </span>
+                                📄 {pageTitle}
+                            </div>
                         )}
                     </div>
                 )}
             </div>
 
-            {/* Main Content */}
+            {/* Main Content with Premium Layout */}
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: '2fr 1fr',
-                gap: '16px',
-                height: 'calc(100vh - 280px)'
+                gap: '24px',
+                height: 'calc(100vh - 360px)',
+                position: 'relative',
+                zIndex: 1
             }}>
-                {/* Browser Viewer */}
+                {/* Browser Viewer with Glass Effect */}
                 <div style={{
-                    background: colors.bgSecondary,
+                    background: `linear-gradient(135deg, ${colors.bgSecondary}dd, ${colors.bgTertiary}dd)`,
+                    backdropFilter: 'blur(20px)',
                     border: `1px solid ${colors.border}`,
-                    borderRadius: '12px',
-                    overflow: 'hidden'
+                    borderRadius: '20px',
+                    overflow: 'hidden',
+                    boxShadow: `0 20px 60px rgba(0, 0, 0, 0.6), 
+                                inset 0 1px 0 rgba(255, 255, 255, 0.08)`,
+                    animation: 'scaleIn 0.5s ease-out'
                 }}>
                     <BrowserViewer
                         screenshot={screenshot}
@@ -318,8 +535,12 @@ export default function WebAutomation() {
                 </div>
 
                 {/* Right Panel */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {/* Control Panel */}
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '20px',
+                    animation: 'slideInRight 0.6s ease-out'
+                }}>
                     <ControlPanel
                         browserLaunched={browserLaunched}
                         isRecording={isRecording}
@@ -329,14 +550,45 @@ export default function WebAutomation() {
                         onPlay={playActions}
                         hasActions={actions.length > 0}
                     />
-
-                    {/* Actions List */}
                     <ActionsList
                         actions={actions}
                         isRecording={isRecording}
                     />
                 </div>
             </div>
+
+            {/* CSS Animations */}
+            <style>{`
+                @keyframes float {
+                    0%, 100% { transform: translateY(0) rotate(0deg); }
+                    50% { transform: translateY(-20px) rotate(5deg); }
+                }
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.05); }
+                }
+                @keyframes ping {
+                    0% { transform: scale(1); opacity: 1; }
+                    75%, 100% { transform: scale(2); opacity: 0; }
+                }
+                @keyframes slideIn {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes slideInRight {
+                    from { opacity: 0; transform: translateX(20px); }
+                    to { opacity: 1; transform: translateX(0); }
+                }
+                @keyframes scaleIn {
+                    from { opacity: 0; transform: scale(0.95); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                @keyframes successPop {
+                    0% { opacity: 0; transform: scale(0) rotate(0deg); }
+                    50% { opacity: 1; transform: scale(1.5) rotate(180deg); }
+                    100% { opacity: 0; transform: scale(2) rotate(360deg); }
+                }
+            `}</style>
         </div>
     )
 }
