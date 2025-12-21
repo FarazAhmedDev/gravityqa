@@ -67,10 +67,29 @@ export default function WebAutomation() {
                 headless: false
             })
 
-            setNavigationProgress(100)
+            setNavigationProgress(50)
 
             if (res.data.success) {
                 setBrowserLaunched(true)
+
+                // If URL is provided, navigate to it immediately
+                if (url.trim()) {
+                    setNavigationProgress(60)
+
+                    const navRes = await axios.post('http://localhost:8000/api/web/browser/navigate', {
+                        url: url.trim()
+                    })
+
+                    setNavigationProgress(90)
+
+                    if (navRes.data.success) {
+                        setCurrentUrl(url.trim())
+                        setPageTitle(navRes.data.title || '')
+                        await updateScreenshot()
+                    }
+                }
+
+                setNavigationProgress(100)
                 setShowSuccessAnimation(true)
                 setTimeout(() => setShowSuccessAnimation(false), 3000)
             }
@@ -761,7 +780,7 @@ export default function WebAutomation() {
                                 background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
                                 animation: 'extremeShimmer 3s infinite'
                             }} />
-                            {isLoading ? '⏳ Launching...' : '🚀 Launch Browser'}
+                            {isLoading ? '⏳ Launching...' : (url.trim() ? '🚀 Launch & Go' : '🚀 Launch Browser')}
                         </button>
                     ) : (
                         <>
