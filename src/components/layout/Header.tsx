@@ -8,7 +8,11 @@ interface ModalState {
     message: string
 }
 
-export default function Header() {
+interface HeaderProps {
+    activeTab: string
+}
+
+export default function Header({ activeTab }: HeaderProps) {
     const [appiumRunning, setAppiumRunning] = useState(false)
     const [isStarting, setIsStarting] = useState(false)
     const [modal, setModal] = useState<ModalState>({
@@ -96,48 +100,50 @@ export default function Header() {
                 </h1>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    {/* Appium Status Badge */}
-                    <div style={{
-                        padding: '10px 18px',
-                        background: appiumRunning
-                            ? 'linear-gradient(135deg, rgba(63, 185, 80, 0.15), rgba(46, 160, 67, 0.12))'
-                            : 'linear-gradient(135deg, rgba(248, 81, 73, 0.15), rgba(218, 54, 51, 0.12))',
-                        borderRadius: '12px',
-                        border: appiumRunning
-                            ? '1.5px solid rgba(63, 185, 80, 0.3)'
-                            : '1.5px solid rgba(248, 81, 73, 0.3)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        boxShadow: appiumRunning
-                            ? '0 0 20px rgba(63, 185, 80, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                            : '0 0 20px rgba(248, 81, 73, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                    }}>
+                    {/* Appium Status Badge - Hide on Web tab */}
+                    {activeTab !== 'web' && (
                         <div style={{
-                            width: '10px',
-                            height: '10px',
-                            borderRadius: '50%',
+                            padding: '10px 18px',
                             background: appiumRunning
-                                ? 'radial-gradient(circle, #3fb950, #238636)'
-                                : 'radial-gradient(circle, #f85149, #da3633)',
+                                ? 'linear-gradient(135deg, rgba(63, 185, 80, 0.15), rgba(46, 160, 67, 0.12))'
+                                : 'linear-gradient(135deg, rgba(248, 81, 73, 0.15), rgba(218, 54, 51, 0.12))',
+                            borderRadius: '12px',
+                            border: appiumRunning
+                                ? '1.5px solid rgba(63, 185, 80, 0.3)'
+                                : '1.5px solid rgba(248, 81, 73, 0.3)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
                             boxShadow: appiumRunning
-                                ? '0 0 16px rgba(63, 185, 80, 1), 0 0 30px rgba(63, 185, 80, 0.5)'
-                                : '0 0 16px rgba(248, 81, 73, 1), 0 0 30px rgba(248, 81, 73, 0.5)',
-                            animation: appiumRunning ? 'statusPulse 2.5s ease-in-out infinite' : 'none'
-                        }}></div>
-                        <span style={{
-                            fontSize: '14px',
-                            fontWeight: 700,
-                            color: appiumRunning ? '#3fb950' : '#f85149',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
+                                ? '0 0 20px rgba(63, 185, 80, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                                : '0 0 20px rgba(248, 81, 73, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
                         }}>
-                            Appium
-                        </span>
-                    </div>
+                            <div style={{
+                                width: '10px',
+                                height: '10px',
+                                borderRadius: '50%',
+                                background: appiumRunning
+                                    ? 'radial-gradient(circle, #3fb950, #238636)'
+                                    : 'radial-gradient(circle, #f85149, #da3633)',
+                                boxShadow: appiumRunning
+                                    ? '0 0 16px rgba(63, 185, 80, 1), 0 0 30px rgba(63, 185, 80, 0.5)'
+                                    : '0 0 16px rgba(248, 81, 73, 1), 0 0 30px rgba(248, 81, 73, 0.5)',
+                                animation: appiumRunning ? 'statusPulse 2.5s ease-in-out infinite' : 'none'
+                            }}></div>
+                            <span style={{
+                                fontSize: '14px',
+                                fontWeight: 700,
+                                color: appiumRunning ? '#3fb950' : '#f85149',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                            }}>
+                                Appium
+                            </span>
+                        </div>
+                    )}
 
-                    {/* Control Button */}
-                    {appiumRunning ? (
+                    {/* Control Button - Hide on Web tab */}
+                    {activeTab !== 'web' && (appiumRunning ? (
                         <button
                             onClick={handleStopAppium}
                             style={{
@@ -321,7 +327,7 @@ export default function Header() {
                                 )}
                             </span>
                         </button>
-                    )}
+                    ))}
                 </div>
 
                 {/* CSS Animations */}

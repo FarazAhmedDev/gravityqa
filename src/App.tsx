@@ -32,7 +32,7 @@ function App() {
         <div className="app-container">
             <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
             <div className="main-content">
-                <Header />
+                <Header activeTab={activeTab} />
                 {activeTab === 'devices' && <DeviceManager />}
                 {activeTab === 'inspector' && <Inspector />}
                 {activeTab === 'editor' && <CodeEditor />}
