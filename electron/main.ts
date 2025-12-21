@@ -9,7 +9,7 @@ let backendProcess: ChildProcess | null = null
 
 // Check and install dependencies
 function setupBackend(backendPath: string, pythonPath: string) {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<void>((resolve) => {
         console.log('Checking backend dependencies...')
 
         const requirementsPath = path.join(backendPath, 'requirements.txt')
