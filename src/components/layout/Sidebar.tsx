@@ -1,6 +1,6 @@
 interface SidebarProps {
     activeTab: string
-    onTabChange: (tab: 'devices' | 'inspector' | 'editor' | 'flows' | 'tests' | 'ai') => void
+    onTabChange: (tab: 'devices' | 'inspector' | 'editor' | 'flows' | 'tests' | 'ai' | 'web') => void
 }
 
 const tabs = [
@@ -10,6 +10,7 @@ const tabs = [
     { id: 'flows', name: 'Flows', icon: '🎬', color: '#3fb950' },
     { id: 'tests', name: 'Tests', icon: '▶️', color: '#a78bfa' },
     { id: 'ai', name: 'AI', icon: '✨', color: '#56d4dd' },
+    { id: 'web', name: 'Web', icon: '🌐', color: '#f97316' },
 ]
 
 export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
