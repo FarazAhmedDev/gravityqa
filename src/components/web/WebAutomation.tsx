@@ -704,9 +704,16 @@ export default function WebAutomation() {
                         type="text"
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && browserLaunched && navigateToUrl()}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                                if (!browserLaunched && url.trim()) {
+                                    launchBrowser()
+                                } else if (browserLaunched) {
+                                    navigateToUrl()
+                                }
+                            }
+                        }}
                         placeholder="Enter website URL..."
-                        disabled={!browserLaunched}
                         style={{
                             flex: 1,
                             background: `linear-gradient(135deg, ${colors.bgTertiary}dd, ${colors.bgSecondary}dd)`,
