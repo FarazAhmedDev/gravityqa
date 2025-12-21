@@ -210,6 +210,16 @@ export default function WebAutomation() {
         }
     }, [browserLaunched, isLoading, currentUrl])
 
+    // Generate particles for background
+    const particles = Array.from({ length: 25 }, (_, i) => ({
+        id: i,
+        size: Math.random() * 4 + 2,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        delay: Math.random() * 5,
+        duration: Math.random() * 10 + 15
+    }))
+
     return (
         <div
             ref={containerRef}
@@ -219,7 +229,7 @@ export default function WebAutomation() {
                 color: colors.text,
                 padding: '32px',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'auto'
             }}
         >
             {/* EXTREME Background Effects */}
@@ -258,6 +268,124 @@ export default function WebAutomation() {
                 filter: 'blur(80px)',
                 animation: 'floatOrb3 30s ease-in-out infinite',
                 pointerEvents: 'none'
+            }} />
+
+            {/* Floating Particles */}
+            {particles.map(p => (
+                <div key={p.id} style={{
+                    position: 'absolute',
+                    left: `${p.x}%`,
+                    top: `${p.y}%`,
+                    width: `${p.size}px`,
+                    height: `${p.size}px`,
+                    background: `radial-gradient(circle, ${colors.primary}80, ${colors.cyan}60)`,
+                    borderRadius: '50%',
+                    filter: 'blur(1px)',
+                    opacity: 0.6,
+                    animation: `floatParticle ${p.duration}s ease-in-out ${p.delay}s infinite`,
+                    pointerEvents: 'none',
+                    boxShadow: `0 0 ${p.size * 2}px ${colors.primary}40`
+                }} />
+            ))}
+
+            {/* Wave Animation (SVG) */}
+            <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                width: '100%',
+                height: '300px',
+                opacity: 0.1,
+                pointerEvents: 'none'
+            }}>
+                <svg viewBox="0 0 1200 300" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
+                    <path d="M0,100 C300,200 400,0 600,100 C800,200 900,0 1200,100 L1200,300 L0,300 Z" fill={colors.primary} opacity="0.3">
+                        <animate attributeName="d" dur="15s" repeatCount="indefinite"
+                            values="M0,100 C300,200 400,0 600,100 C800,200 900,0 1200,100 L1200,300 L0,300 Z;
+                                    M0,150 C300,50 400,250 600,150 C800,50 900,250 1200,150 L1200,300 L0,300 Z;
+                                    M0,100 C300,200 400,0 600,100 C800,200 900,0 1200,100 L1200,300 L0,300 Z" />
+                    </path>
+                    <path d="M0,150 C300,50 400,250 600,150 C800,50 900,250 1200,150 L1200,300 L0,300 Z" fill={colors.cyan} opacity="0.2">
+                        <animate attributeName="d" dur="20s" repeatCount="indefinite"
+                            values="M0,150 C300,50 400,250 600,150 C800,50 900,250 1200,150 L1200,300 L0,300 Z;
+                                    M0,100 C300,200 400,0 600,100 C800,200 900,0 1200,100 L1200,300 L0,300 Z;
+                                    M0,150 C300,50 400,250 600,150 C800,50 900,250 1200,150 L1200,300 L0,300 Z" />
+                    </path>
+                </svg>
+            </div>
+
+            {/* Geometric Shapes */}
+            <div style={{
+                position: 'absolute',
+                top: '15%',
+                right: '15%',
+                width: '100px',
+                height: '100px',
+                border: `2px solid ${colors.purple}30`,
+                borderRadius: '20px',
+                animation: 'rotateShape 20s linear infinite',
+                pointerEvents: 'none'
+            }} />
+            <div style={{
+                position: 'absolute',
+                bottom: '20%',
+                left: '20%',
+                width: '80px',
+                height: '80px',
+                border: `2px solid ${colors.primary}25`,
+                borderRadius: '50%',
+                animation: 'scaleShape 15s ease-in-out infinite',
+                pointerEvents: 'none'
+            }} />
+            <div style={{
+                position: 'absolute',
+                top: '50%',
+                right: '30%',
+                width: '60px',
+                height: '60px',
+                border: `2px solid ${colors.cyan}20`,
+                transform: 'rotate(45deg)',
+                animation: 'floatShape 25s ease-in-out infinite',
+                pointerEvents: 'none'
+            }} />
+
+            {/* Twinkling Stars */}
+            {[...Array(15)].map((_, i) => (
+                <div key={`star-${i}`} style={{
+                    position: 'absolute',
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    width: '2px',
+                    height: '2px',
+                    background: 'white',
+                    borderRadius: '50%',
+                    boxShadow: `0 0 ${Math.random() * 10 + 5}px ${colors.cyan}`,
+                    animation: `twinkle ${Math.random() * 3 + 2}s ease-in-out ${Math.random() * 2}s infinite`,
+                    pointerEvents: 'none'
+                }} />
+            ))}
+
+            {/* Rotating Light Rays */}
+            <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: '1000px',
+                height: '1000px',
+                transform: 'translate(-50%, -50%)',
+                background: `conic-gradient(
+                    from 0deg,
+                    transparent 0deg,
+                    ${colors.primary}05 10deg,
+                    transparent 20deg,
+                    ${colors.cyan}05 30deg,
+                    transparent 40deg,
+                    ${colors.purple}05 50deg,
+                    transparent 60deg
+                )`,
+                animation: 'rotateRays 60s linear infinite',
+                pointerEvents: 'none',
+                opacity: 0.5
             }} />
 
             {/* Scanline Effect */}
@@ -898,6 +1026,33 @@ export default function WebAutomation() {
                 @keyframes titleGlow {
                     0%, 100% { box-shadow: 0 0 20px ${colors.blue}20; }
                     50% { box-shadow: 0 0 35px ${colors.blue}40; }
+                }
+                @keyframes floatParticle {
+                    0%, 100% { transform: translateY(0) translateX(0); }
+                    25% { transform: translateY(-100px) translateX(50px); }
+                    50% { transform: translateY(-200px) translateX(-30px); }
+                    75% { transform: translateY(-100px) translateX(70px); }
+                }
+                @keyframes rotateShape {
+                    0% { transform: rotate(0deg) scale(1); }
+                    50% { transform: rotate(180deg) scale(1.2); }
+                    100% { transform: rotate(360deg) scale(1); }
+                }
+                @keyframes scaleShape {
+                    0%, 100% { transform: scale(1); opacity: 0.3; }
+                    50% { transform: scale(1.5); opacity: 0.6; }
+                }
+                @keyframes floatShape {
+                    0%, 100% { transform: translateY(0) rotate(45deg); }
+                    50% { transform: translateY(-50px) rotate(225deg); }
+                }
+                @keyframes twinkle {
+                    0%, 100% { opacity: 0.3; transform: scale(1); }
+                    50% { opacity: 1; transform: scale(1.5); }
+                }
+                @keyframes rotateRays {
+                    0% { transform: translate(-50%, -50%) rotate(0deg); }
+                    100% { transform: translate(-50%, -50%) rotate(360deg); }
                 }
             `}</style>
         </div>
