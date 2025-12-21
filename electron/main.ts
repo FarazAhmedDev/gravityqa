@@ -7,8 +7,60 @@ const isDev = process.env.NODE_ENV === 'development'
 let mainWindow: BrowserWindow | null = null
 let backendProcess: ChildProcess | null = null
 
+// Check and install dependencies
+function setupBackend(backendPath: string, pythonPath: string) {
+    return new Promise<void>((resolve, reject) => {
+        console.log('Checking backend dependencies...')
+
+        const requirementsPath = path.join(backendPath, 'requirements.txt')
+
+        // Install pip packages
+        const pipInstall = spawn(pythonPath, ['-m', 'pip', 'install', '-r', requirementsPath], {
+            cwd: backendPath,
+            env: { ...process.env, PYTHONUNBUFFERED: '1' }
+        })
+
+        pipInstall.stdout?.on('data', (data) => {
+            console.log(`[Setup] ${data}`)
+        })
+
+        pipInstall.stderr?.on('data', (data) => {
+            console.error(`[Setup Error] ${data}`)
+        })
+
+        pipInstall.on('close', (code) => {
+            if (code === 0) {
+                console.log('Dependencies installed successfully')
+
+                // Install Playwright browsers
+                const playwrightInstall = spawn(pythonPath, ['-m', 'playwright', 'install'], {
+                    cwd: backendPath,
+                    env: { ...process.env, PYTHONUNBUFFERED: '1' }
+                })
+
+                playwrightInstall.stdout?.on('data', (data) => {
+                    console.log(`[Playwright Setup] ${data}`)
+                })
+
+                playwrightInstall.on('close', (playwrightCode) => {
+                    if (playwrightCode === 0) {
+                        console.log('Playwright browsers installed')
+                        resolve()
+                    } else {
+                        console.warn('Playwright install failed, but continuing...')
+                        resolve() // Continue even if playwright install fails
+                    }
+                })
+            } else {
+                console.warn('Pip install had errors, but continuing...')
+                resolve() // Continue even if some packages fail
+            }
+        })
+    })
+}
+
 // Start Python backend
-function startBackend() {
+async function startBackend() {
     const backendPath = isDev
         ? path.join(__dirname, '../../backend')
         : path.join(process.resourcesPath, 'backend')
@@ -19,6 +71,13 @@ function startBackend() {
 
     const mainPy = path.join(backendPath, 'main.py')
 
+    // Run setup first
+    try {
+        await setupBackend(backendPath, pythonPath)
+    } catch (error) {
+        console.error('Setup failed:', error)
+    }
+
     console.log('Starting backend:', pythonPath, mainPy)
 
     backendProcess = spawn(pythonPath, [mainPy], {
@@ -27,11 +86,11 @@ function startBackend() {
     })
 
     backendProcess.stdout?.on('data', (data) => {
-        console.log(`Backend: ${data}`)
+        console.log(`[Backend] ${data}`)
     })
 
     backendProcess.stderr?.on('data', (data) => {
-        console.error(`Backend Error: ${data}`)
+        console.error(`[Backend Error] ${data}`)
     })
 
     backendProcess.on('close', (code) => {
