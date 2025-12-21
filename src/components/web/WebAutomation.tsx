@@ -13,6 +13,7 @@ interface WebAction {
 }
 
 export default function WebAutomation() {
+    const [mode, setMode] = useState<'browser' | 'inspector' | 'recorder' | 'playback'>('browser')
     const [url, setUrl] = useState('https://example.com')
     const [browserLaunched, setBrowserLaunched] = useState(false)
     const [currentUrl, setCurrentUrl] = useState('')
@@ -429,7 +430,7 @@ export default function WebAutomation() {
                 opacity: 0.3
             }} />
 
-            {/* EXTREME Header */}
+            {/* EXTREME Header - No Box */}
             <div style={{
                 marginBottom: '32px',
                 display: 'flex',
@@ -441,35 +442,9 @@ export default function WebAutomation() {
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '20px',
-                    background: `linear-gradient(135deg, ${colors.bgSecondary}dd 0%, ${colors.bgTertiary}dd 100%)`,
-                    backdropFilter: 'blur(30px) saturate(180%)',
-                    padding: '20px 32px',
-                    borderRadius: '20px',
-                    border: `1px solid ${colors.border}`,
-                    boxShadow: `
-                        0 0 60px ${colors.primary}20,
-                        0 12px 40px rgba(0, 0, 0, 0.5), 
-                        inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                        inset 0 0 20px rgba(249, 115, 22, 0.05)
-                    `,
-                    position: 'relative',
-                    overflow: 'hidden'
+                    gap: '20px'
                 }}>
-                    {/* Holographic border effect */}
-                    <div style={{
-                        position: 'absolute',
-                        inset: 0,
-                        borderRadius: '20px',
-                        padding: '2px',
-                        background: `linear-gradient(45deg, ${colors.primary}40, ${colors.cyan}40, ${colors.purple}40, ${colors.primary}40)`,
-                        WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                        WebkitMaskComposite: 'xor',
-                        maskComposite: 'exclude',
-                        animation: 'rotateBorder 8s linear infinite',
-                        pointerEvents: 'none'
-                    }} />
-
+                    {/* WWW Icon using image */}
                     <div style={{
                         width: '64px',
                         height: '64px',
@@ -478,7 +453,7 @@ export default function WebAutomation() {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '36px',
+                        padding: '12px',
                         boxShadow: `
                             0 0 40px ${colors.primary}60,
                             0 0 80px ${colors.primary}30,
@@ -496,7 +471,10 @@ export default function WebAutomation() {
                             background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), transparent)`,
                             pointerEvents: 'none'
                         }} />
-                        <span style={{ position: 'relative', zIndex: 1 }}>🌐</span>
+                        {/* WWW Icon Image */}
+                        <svg viewBox="0 0 512 512" style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1 }} fill="white">
+                            <path d="M352,256C352,278.2,350.8,299.6,348.7,320H163.3C161.2,299.6,160,278.2,160,256C160,233.8,161.2,212.4,163.3,192H348.7C350.8,212.4,352,233.8,352,256zM503.9,192C509.2,212.5,512,233.9,512,256C512,278.1,509.2,299.5,503.9,320H380.8C383.1,299.4,384,277.1,384,256C384,234.9,383.1,212.6,380.8,192H503.9zM493.4,160H376.7C366.7,96.14,346.9,42.62,321.4,8.442C399.8,29.09,467.4,77.18,493.4,160zM192,256C192,228.6,194.4,202.1,198.6,176H313.4C317.6,202.1,320,228.6,320,256C320,283.4,317.6,309.9,313.4,336H198.6C194.4,309.9,192,283.4,192,256zM190.6,8.442C165.1,42.62,145.3,96.14,135.3,160H18.56C44.62,77.18,112.2,29.09,190.6,8.442zM131.2,192C128.9,212.6,128,234.9,128,256C128,277.1,128.9,299.4,131.2,320H8.065C2.8,299.5,0,278.1,0,256C0,233.9,2.8,212.5,8.065,192H131.2zM194.7,504.3C219.8,470.1,239.5,416.6,249.5,352H135.3C145.3,415.9,165.1,469.4,190.6,503.6C191.9,503.9,193.3,504.2,194.7,504.3L194.7,504.3zM317.3,503.6C342.4,469.4,362.1,415.9,372.1,352H135.3C145.3,415.9,165.1,469.4,190.6,503.6C191.9,503.9,193.3,504.2,194.7,504.3C293.2,504.2,315.9,503.9,317.3,503.6zM376.7,352C366.7,415.9,346.9,469.4,321.4,503.6C399.8,482.9,467.4,434.8,493.4,352H376.7z" />
+                        </svg>
                     </div>
 
                     <div>
@@ -526,27 +504,44 @@ export default function WebAutomation() {
                     </div>
                 </div>
 
-                {/* Extreme Status Badge */}
-                <div style={{
-                    padding: '14px 24px',
-                    background: browserLaunched
-                        ? `linear-gradient(135deg, ${colors.success}25, ${colors.success}15)`
-                        : `${colors.textSecondary}20`,
-                    border: `2px solid ${browserLaunched ? colors.success : colors.textSecondary}`,
-                    borderRadius: '14px',
-                    fontSize: '14px',
-                    fontWeight: 800,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    backdropFilter: 'blur(20px) saturate(180%)',
-                    boxShadow: browserLaunched
-                        ? `0 0 30px ${colors.success}40, 0 8px 25px rgba(0,0,0,0.3)`
-                        : '0 4px 15px rgba(0,0,0,0.2)',
-                    animation: browserLaunched ? 'statusGlow 2s ease-in-out infinite' : 'none',
-                    position: 'relative',
-                    overflow: 'hidden'
-                }}>
+                {/* Extreme Status Badge - Clickable */}
+                <div
+                    onClick={() => !browserLaunched && !isLoading && launchBrowser()}
+                    style={{
+                        padding: '14px 24px',
+                        background: browserLaunched
+                            ? `linear-gradient(135deg, ${colors.success}25, ${colors.success}15)`
+                            : `linear-gradient(135deg, ${colors.error}25, ${colors.error}15)`,
+                        border: `2px solid ${browserLaunched ? colors.success : colors.error}`,
+                        borderRadius: '14px',
+                        fontSize: '14px',
+                        fontWeight: 800,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        backdropFilter: 'blur(20px) saturate(180%)',
+                        boxShadow: browserLaunched
+                            ? `0 0 30px ${colors.success}40, 0 8px 25px rgba(0,0,0,0.3)`
+                            : `0 0 30px ${colors.error}40, 0 4px 15px rgba(0,0,0,0.2)`,
+                        animation: browserLaunched ? 'statusGlow 2s ease-in-out infinite' : 'none',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        cursor: (!browserLaunched && !isLoading) ? 'pointer' : 'default',
+                        transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                        if (!browserLaunched && !isLoading) {
+                            e.currentTarget.style.transform = 'translateY(-2px)'
+                            e.currentTarget.style.boxShadow = `0 0 40px ${colors.error}60, 0 6px 20px rgba(0,0,0,0.3)`
+                        }
+                    }}
+                    onMouseLeave={(e) => {
+                        if (!browserLaunched && !isLoading) {
+                            e.currentTarget.style.transform = 'translateY(0)'
+                            e.currentTarget.style.boxShadow = `0 0 30px ${colors.error}40, 0 4px 15px rgba(0,0,0,0.2)`
+                        }
+                    }}
+                >
                     {/* Animated background */}
                     {browserLaunched && (
                         <div style={{
@@ -883,6 +878,85 @@ export default function WebAutomation() {
                         )}
                     </div>
                 )}
+            </div>
+
+            {/* Mode Selector Tabs - Like Mobile Automation */}
+            <div style={{
+                marginBottom: '24px',
+                background: `linear-gradient(135deg, ${colors.bgSecondary}dd, ${colors.bgTertiary}dd)`,
+                backdropFilter: 'blur(20px)',
+                border: `1px solid ${colors.border}`,
+                borderRadius: '16px',
+                padding: '8px',
+                display: 'flex',
+                gap: '8px',
+                position: 'relative',
+                zIndex: 1,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)'
+            }}>
+                {[
+                    { id: 'browser', icon: '🌐', label: 'Browser', color: colors.primary },
+                    { id: 'inspector', icon: '🔍', label: 'Inspector', color: colors.blue },
+                    { id: 'recorder', icon: '⏺️', label: 'Recorder', color: colors.error },
+                    { id: 'playback', icon: '▶️', label: 'Playback', color: colors.success }
+                ].map((m) => (
+                    <button
+                        key={m.id}
+                        onClick={() => setMode(m.id as any)}
+                        disabled={!browserLaunched && m.id !== 'browser'}
+                        style={{
+                            flex: 1,
+                            padding: '14px 20px',
+                            background: mode === m.id
+                                ? `linear-gradient(135deg, ${m.color}25, ${m.color}15)`
+                                : 'transparent',
+                            border: mode === m.id
+                                ? `2px solid ${m.color}`
+                                : '2px solid transparent',
+                            borderRadius: '12px',
+                            color: mode === m.id ? m.color : (!browserLaunched && m.id !== 'browser') ? colors.textSecondary : colors.text,
+                            fontWeight: mode === m.id ? 800 : 600,
+                            fontSize: '15px',
+                            cursor: (!browserLaunched && m.id !== 'browser') ? 'not-allowed' : 'pointer',
+                            opacity: (!browserLaunched && m.id !== 'browser') ? 0.4 : 1,
+                            transition: 'all 0.3s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            boxShadow: mode === m.id
+                                ? `0 0 20px ${m.color}30, inset 0 1px 0 rgba(255,255,255,0.1)`
+                                : 'none'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (browserLaunched || m.id === 'browser') {
+                                e.currentTarget.style.transform = 'translateY(-2px)'
+                                if (mode !== m.id) {
+                                    e.currentTarget.style.background = `${m.color}10`
+                                }
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)'
+                            if (mode !== m.id) {
+                                e.currentTarget.style.background = 'transparent'
+                            }
+                        }}
+                    >
+                        {mode === m.id && (
+                            <div style={{
+                                position: 'absolute',
+                                inset: 0,
+                                background: `linear-gradient(90deg, transparent, ${m.color}20, transparent)`,
+                                animation: 'shimmerSweep 3s linear infinite'
+                            }} />
+                        )}
+                        <span style={{ fontSize: '20px', position: 'relative', zIndex: 1 }}>{m.icon}</span>
+                        <span style={{ position: 'relative', zIndex: 1 }}>{m.label}</span>
+                    </button>
+                ))}
             </div>
 
             {/* Main Content */}
