@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import BrowserViewer from './BrowserViewer'
 import ControlPanel from './ControlPanel'
@@ -24,6 +24,8 @@ export default function WebAutomation() {
     const [pageTitle, setPageTitle] = useState('')
     const [navigationProgress, setNavigationProgress] = useState(0)
     const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+    const containerRef = useRef<HTMLDivElement>(null)
 
     const colors = {
         bg: '#0d1117',
@@ -35,8 +37,25 @@ export default function WebAutomation() {
         primary: '#f97316',
         success: '#3fb950',
         error: '#f85149',
-        blue: '#58a6ff'
+        blue: '#58a6ff',
+        purple: '#a78bfa',
+        cyan: '#56d4dd'
     }
+
+    // Mouse tracking for parallax
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect()
+                setMousePosition({
+                    x: (e.clientX - rect.left) / rect.width,
+                    y: (e.clientY - rect.top) / rect.height
+                })
+            }
+        }
+        window.addEventListener('mousemove', handleMouseMove)
+        return () => window.removeEventListener('mousemove', handleMouseMove)
+    }, [])
 
     const launchBrowser = async () => {
         try {
@@ -52,7 +71,7 @@ export default function WebAutomation() {
             if (res.data.success) {
                 setBrowserLaunched(true)
                 setShowSuccessAnimation(true)
-                setTimeout(() => setShowSuccessAnimation(false), 2000)
+                setTimeout(() => setShowSuccessAnimation(false), 3000)
             }
         } catch (error) {
             console.error('Failed to launch browser:', error)
@@ -72,7 +91,6 @@ export default function WebAutomation() {
             setIsLoading(true)
             setNavigationProgress(0)
 
-            // Animate progress
             const progressInterval = setInterval(() => {
                 setNavigationProgress(prev => {
                     if (prev >= 90) return prev
@@ -90,13 +108,10 @@ export default function WebAutomation() {
             if (res.data.success) {
                 setCurrentUrl(res.data.url)
                 setPageTitle(res.data.title || '')
-
-                // Get screenshot
                 await updateScreenshot()
-
                 setNavigationProgress(100)
                 setShowSuccessAnimation(true)
-                setTimeout(() => setShowSuccessAnimation(false), 2000)
+                setTimeout(() => setShowSuccessAnimation(false), 3000)
             }
         } catch (error) {
             console.error('Navigation failed:', error)
@@ -186,7 +201,6 @@ export default function WebAutomation() {
         }
     }
 
-    // Auto-update screenshot
     useEffect(() => {
         if (browserLaunched && !isLoading && currentUrl) {
             const interval = setInterval(() => {
@@ -197,166 +211,341 @@ export default function WebAutomation() {
     }, [browserLaunched, isLoading, currentUrl])
 
     return (
-        <div style={{
-            background: `linear-gradient(135deg, ${colors.bg} 0%, #0a0e14 100%)`,
-            minHeight: '100vh',
-            color: colors.text,
-            padding: '32px',
-            position: 'relative',
-            overflow: 'hidden'
-        }}>
-            {/* Animated background particles */}
+        <div
+            ref={containerRef}
+            style={{
+                background: `linear-gradient(135deg, ${colors.bg} 0%, #0a0e14 50%, #080b10 100%)`,
+                minHeight: '100vh',
+                color: colors.text,
+                padding: '32px',
+                position: 'relative',
+                overflow: 'hidden'
+            }}
+        >
+            {/* EXTREME Background Effects */}
+            {/* Animated Gradient Orbs */}
+            <div style={{
+                position: 'absolute',
+                top: '20%',
+                left: '10%',
+                width: '500px',
+                height: '500px',
+                background: `radial-gradient(circle, ${colors.primary}15 0%, transparent 70%)`,
+                filter: 'blur(60px)',
+                animation: 'floatOrb1 20s ease-in-out infinite',
+                pointerEvents: 'none',
+                transform: `translate(${mousePosition.x * 30}px, ${mousePosition.y * 30}px)`
+            }} />
+            <div style={{
+                position: 'absolute',
+                top: '60%',
+                right: '10%',
+                width: '400px',
+                height: '400px',
+                background: `radial-gradient(circle, ${colors.cyan}15 0%, transparent 70%)`,
+                filter: 'blur(60px)',
+                animation: 'floatOrb2 25s ease-in-out infinite',
+                pointerEvents: 'none',
+                transform: `translate(${-mousePosition.x * 40}px, ${-mousePosition.y * 40}px)`
+            }} />
+            <div style={{
+                position: 'absolute',
+                top: '40%',
+                left: '50%',
+                width: '350px',
+                height: '350px',
+                background: `radial-gradient(circle, ${colors.purple}12 0%, transparent 70%)`,
+                filter: 'blur(80px)',
+                animation: 'floatOrb3 30s ease-in-out infinite',
+                pointerEvents: 'none'
+            }} />
+
+            {/* Scanline Effect */}
             <div style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 right: 0,
                 bottom: 0,
-                background: `radial-gradient(circle at 20% 50%, ${colors.primary}08 0%, transparent 50%),
-                             radial-gradient(circle at 80% 80%, ${colors.blue}08 0%, transparent 50%)`,
-                animation: 'float 20s ease-in-out infinite',
-                pointerEvents: 'none'
+                background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.01) 2px, rgba(255,255,255,0.01) 4px)',
+                pointerEvents: 'none',
+                opacity: 0.3
             }} />
 
-            {/* Header with premium styling */}
+            {/* Animated Grid */}
+            <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundImage: `
+                    linear-gradient(${colors.primary}08 1px, transparent 1px),
+                    linear-gradient(90deg, ${colors.primary}08 1px, transparent 1px)
+                `,
+                backgroundSize: '50px 50px',
+                animation: 'gridPulse 10s ease-in-out infinite',
+                pointerEvents: 'none',
+                opacity: 0.3
+            }} />
+
+            {/* EXTREME Header */}
             <div style={{
                 marginBottom: '32px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '20px',
+                gap: '24px',
                 position: 'relative',
                 zIndex: 1
             }}>
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '16px',
-                    background: `linear-gradient(135deg, ${colors.bgSecondary}cc, ${colors.bgTertiary}cc)`,
-                    backdropFilter: 'blur(20px)',
-                    padding: '16px 28px',
-                    borderRadius: '16px',
+                    gap: '20px',
+                    background: `linear-gradient(135deg, ${colors.bgSecondary}dd 0%, ${colors.bgTertiary}dd 100%)`,
+                    backdropFilter: 'blur(30px) saturate(180%)',
+                    padding: '20px 32px',
+                    borderRadius: '20px',
                     border: `1px solid ${colors.border}`,
-                    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.4), 
-                                inset 0 1px 0 rgba(255, 255, 255, 0.05)`
+                    boxShadow: `
+                        0 0 60px ${colors.primary}20,
+                        0 12px 40px rgba(0, 0, 0, 0.5), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                        inset 0 0 20px rgba(249, 115, 22, 0.05)
+                    `,
+                    position: 'relative',
+                    overflow: 'hidden'
                 }}>
+                    {/* Holographic border effect */}
                     <div style={{
-                        width: '56px',
-                        height: '56px',
-                        borderRadius: '14px',
+                        position: 'absolute',
+                        inset: 0,
+                        borderRadius: '20px',
+                        padding: '2px',
+                        background: `linear-gradient(45deg, ${colors.primary}40, ${colors.cyan}40, ${colors.purple}40, ${colors.primary}40)`,
+                        WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                        WebkitMaskComposite: 'xor',
+                        maskComposite: 'exclude',
+                        animation: 'rotateBorder 8s linear infinite',
+                        pointerEvents: 'none'
+                    }} />
+
+                    <div style={{
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '16px',
                         background: `linear-gradient(135deg, ${colors.primary}, ${colors.primary}dd)`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '32px',
-                        boxShadow: `0 0 30px ${colors.primary}40`,
-                        animation: browserLaunched ? 'pulse 3s ease-in-out infinite' : 'none'
+                        fontSize: '36px',
+                        boxShadow: `
+                            0 0 40px ${colors.primary}60,
+                            0 0 80px ${colors.primary}30,
+                            inset 0 2px 10px rgba(255,255,255,0.2)
+                        `,
+                        animation: browserLaunched ? 'extremePulse 3s ease-in-out infinite, rotate3D 10s linear infinite' : 'none',
+                        transform: 'perspective(1000px)',
+                        position: 'relative'
                     }}>
-                        🌐
+                        {/* Inner glow */}
+                        <div style={{
+                            position: 'absolute',
+                            inset: '4px',
+                            borderRadius: '12px',
+                            background: `radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), transparent)`,
+                            pointerEvents: 'none'
+                        }} />
+                        <span style={{ position: 'relative', zIndex: 1 }}>🌐</span>
                     </div>
+
                     <div>
                         <h1 style={{
                             margin: 0,
-                            fontSize: '32px',
-                            fontWeight: 800,
-                            background: `linear-gradient(135deg, ${colors.text}, ${colors.textSecondary})`,
+                            fontSize: '36px',
+                            fontWeight: 900,
+                            background: `linear-gradient(135deg, ${colors.text} 0%, ${colors.primary} 50%, ${colors.cyan} 100%)`,
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
-                            letterSpacing: '-0.5px'
+                            letterSpacing: '-1px',
+                            textShadow: `0 0 30px ${colors.primary}40`,
+                            animation: 'shimmerText 5s ease-in-out infinite'
                         }}>
                             Web Automation
                         </h1>
                         <p style={{
-                            margin: '4px 0 0 0',
-                            fontSize: '13px',
+                            margin: '6px 0 0 0',
+                            fontSize: '14px',
                             color: colors.textSecondary,
-                            fontWeight: 500
+                            fontWeight: 600,
+                            letterSpacing: '2px',
+                            textTransform: 'uppercase'
                         }}>
-                            Powered by Playwright
+                            Powered by Playwright • AI-Enhanced
                         </p>
                     </div>
                 </div>
 
-                {/* Status Badge */}
+                {/* Extreme Status Badge */}
                 <div style={{
-                    padding: '12px 20px',
+                    padding: '14px 24px',
                     background: browserLaunched
-                        ? `linear-gradient(135deg, ${colors.success}20, ${colors.success}10)`
+                        ? `linear-gradient(135deg, ${colors.success}25, ${colors.success}15)`
                         : `${colors.textSecondary}20`,
                     border: `2px solid ${browserLaunched ? colors.success : colors.textSecondary}`,
-                    borderRadius: '12px',
-                    fontSize: '13px',
-                    fontWeight: 700,
+                    borderRadius: '14px',
+                    fontSize: '14px',
+                    fontWeight: 800,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '10px',
-                    backdropFilter: 'blur(10px)',
-                    boxShadow: browserLaunched ? `0 0 20px ${colors.success}30` : 'none',
-                    animation: browserLaunched ? 'slideIn 0.5s ease-out' : 'none'
+                    gap: '12px',
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    boxShadow: browserLaunched
+                        ? `0 0 30px ${colors.success}40, 0 8px 25px rgba(0,0,0,0.3)`
+                        : '0 4px 15px rgba(0,0,0,0.2)',
+                    animation: browserLaunched ? 'statusGlow 2s ease-in-out infinite' : 'none',
+                    position: 'relative',
+                    overflow: 'hidden'
                 }}>
-                    <span style={{
-                        width: '10px',
-                        height: '10px',
-                        borderRadius: '50%',
-                        background: browserLaunched ? colors.success : colors.textSecondary,
-                        boxShadow: browserLaunched ? `0 0 10px ${colors.success}` : 'none',
-                        animation: browserLaunched ? 'ping 2s ease-in-out infinite' : 'none'
-                    }} />
-                    {browserLaunched ? 'BROWSER ACTIVE' : 'NOT CONNECTED'}
+                    {/* Animated background */}
+                    {browserLaunched && (
+                        <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            background: `linear-gradient(90deg, transparent, ${colors.success}20, transparent)`,
+                            animation: 'shimmerSweep 3s linear infinite'
+                        }} />
+                    )}
+
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ position: 'relative' }}>
+                            <span style={{
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: '50%',
+                                background: browserLaunched ? colors.success : colors.textSecondary,
+                                display: 'block',
+                                boxShadow: browserLaunched ? `0 0 15px ${colors.success}, 0 0 30px ${colors.success}60` : 'none'
+                            }} />
+                            {browserLaunched && (
+                                <>
+                                    <span style={{
+                                        position: 'absolute',
+                                        inset: '-4px',
+                                        borderRadius: '50%',
+                                        border: `2px solid ${colors.success}`,
+                                        animation: 'extremePing 2s ease-out infinite'
+                                    }} />
+                                    <span style={{
+                                        position: 'absolute',
+                                        inset: '-4px',
+                                        borderRadius: '50%',
+                                        border: `2px solid ${colors.success}`,
+                                        animation: 'extremePing 2s ease-out infinite 0.5s'
+                                    }} />
+                                </>
+                            )}
+                        </div>
+                        {browserLaunched ? 'BROWSER ACTIVE' : 'NOT CONNECTED'}
+                    </div>
                 </div>
 
+                {/* Extreme Success Animation */}
                 {showSuccessAnimation && (
-                    <div style={{
-                        position: 'absolute',
-                        right: 0,
-                        fontSize: '48px',
-                        animation: 'successPop 2s ease-out forwards'
-                    }}>
-                        ✨
-                    </div>
+                    <>
+                        <div style={{
+                            position: 'absolute',
+                            right: '-50px',
+                            top: '50%',
+                            fontSize: '64px',
+                            animation: 'extremeSuccess 3s ease-out forwards',
+                            filter: 'drop-shadow(0 0 20px rgba(249, 115, 22, 0.8))'
+                        }}>
+                            ✨
+                        </div>
+                        <div style={{
+                            position: 'absolute',
+                            right: '20px',
+                            top: '20%',
+                            fontSize: '48px',
+                            animation: 'extremeSuccess 3s ease-out 0.2s forwards',
+                            filter: 'drop-shadow(0 0 15px rgba(86, 212, 221, 0.8))'
+                        }}>
+                            🎉
+                        </div>
+                        <div style={{
+                            position: 'absolute',
+                            right: '60px',
+                            top: '70%',
+                            fontSize: '52px',
+                            animation: 'extremeSuccess 3s ease-out 0.4s forwards',
+                            filter: 'drop-shadow(0 0 15px rgba(167, 139, 250, 0.8))'
+                        }}>
+                            🚀
+                        </div>
+                    </>
                 )}
             </div>
 
-            {/* Premium Browser Address Bar */}
+            {/* EXTREME Address Bar */}
             <div style={{
-                background: `linear-gradient(135deg, ${colors.bgSecondary}dd, ${colors.bgTertiary}dd)`,
-                backdropFilter: 'blur(30px)',
+                background: `linear-gradient(135deg, ${colors.bgSecondary}dd 0%, ${colors.bgTertiary}dd 100%)`,
+                backdropFilter: 'blur(40px) saturate(180%)',
                 border: `1px solid ${colors.border}`,
-                borderRadius: '16px',
-                padding: '24px',
-                marginBottom: '24px',
-                boxShadow: `0 12px 40px rgba(0, 0, 0, 0.5), 
-                            inset 0 1px 0 rgba(255, 255, 255, 0.08)`,
+                borderRadius: '20px',
+                padding: '28px',
+                marginBottom: '28px',
+                boxShadow: `
+                    0 0 60px rgba(0,0,0,0.3),
+                    0 15px 50px rgba(0, 0, 0, 0.6), 
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                    inset 0 0 30px rgba(249, 115, 22, 0.03)
+                `,
                 position: 'relative',
                 zIndex: 1,
                 overflow: 'hidden'
             }}>
-                {/* Progress bar */}
+                {/* Extreme Progress Bar */}
                 {navigationProgress > 0 && (
-                    <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        height: '3px',
-                        width: `${navigationProgress}%`,
-                        background: `linear-gradient(90deg, ${colors.primary}, ${colors.blue})`,
-                        transition: 'width 0.3s ease-out',
-                        boxShadow: `0 0 10px ${colors.primary}`
-                    }} />
+                    <>
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            height: '4px',
+                            width: `${navigationProgress}%`,
+                            background: `linear-gradient(90deg, ${colors.primary}, ${colors.cyan}, ${colors.purple})`,
+                            backgroundSize: '200% 100%',
+                            transition: 'width 0.3s ease-out',
+                            boxShadow: `0 0 20px ${colors.primary}, 0 0 40px ${colors.cyan}40`,
+                            animation: 'progressShimmer 2s linear infinite'
+                        }} />
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            height: '4px',
+                            width: `${navigationProgress}%`,
+                            background: 'rgba(255,255,255,0.5)',
+                            filter: 'blur(8px)',
+                            transition: 'width 0.3s ease-out'
+                        }} />
+                    </>
                 )}
 
                 {/* URL Bar */}
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
-                    {/* Lock Icon */}
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '20px' }}>
                     <div style={{
-                        padding: '12px',
-                        background: `${colors.success}15`,
-                        borderRadius: '10px',
-                        border: `1px solid ${colors.success}30`
+                        padding: '14px',
+                        background: `linear-gradient(135deg, ${colors.success}18, ${colors.success}10)`,
+                        borderRadius: '12px',
+                        border: `2px solid ${colors.success}40`,
+                        boxShadow: `0 0 20px ${colors.success}20, inset 0 1px 5px rgba(255,255,255,0.1)`,
+                        animation: 'iconFloat 4s ease-in-out infinite'
                     }}>
-                        <span style={{ fontSize: '18px' }}>🔒</span>
+                        <span style={{ fontSize: '22px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>🔒</span>
                     </div>
 
-                    {/* URL Input */}
                     <input
                         type="text"
                         value={url}
@@ -366,27 +555,30 @@ export default function WebAutomation() {
                         disabled={!browserLaunched}
                         style={{
                             flex: 1,
-                            background: colors.bgTertiary,
+                            background: `linear-gradient(135deg, ${colors.bgTertiary}dd, ${colors.bgSecondary}dd)`,
+                            backdropFilter: 'blur(10px)',
                             border: `2px solid ${colors.border}`,
-                            borderRadius: '12px',
-                            padding: '14px 20px',
+                            borderRadius: '14px',
+                            padding: '16px 24px',
                             color: colors.text,
-                            fontSize: '15px',
-                            fontWeight: 500,
-                            transition: 'all 0.3s ease',
-                            outline: 'none'
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                            outline: 'none',
+                            boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.2)'
                         }}
                         onFocus={(e) => {
                             e.target.style.borderColor = colors.primary
-                            e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`
+                            e.target.style.boxShadow = `0 0 0 4px ${colors.primary}20, inset 0 2px 8px rgba(0,0,0,0.2), 0 0 30px ${colors.primary}30`
+                            e.target.style.transform = 'translateY(-2px)'
                         }}
                         onBlur={(e) => {
                             e.target.style.borderColor = colors.border
-                            e.target.style.boxShadow = 'none'
+                            e.target.style.boxShadow = 'inset 0 2px 8px rgba(0,0,0,0.2)'
+                            e.target.style.transform = 'translateY(0)'
                         }}
                     />
 
-                    {/* Action Buttons */}
                     {!browserLaunched ? (
                         <button
                             onClick={launchBrowser}
@@ -396,19 +588,44 @@ export default function WebAutomation() {
                                 background: 'linear-gradient(135deg, #3fb950 0%, #2ea043 50%, #238636 100%)',
                                 color: 'white',
                                 border: 'none',
-                                padding: '14px 32px',
-                                borderRadius: '12px',
-                                fontWeight: 700,
-                                fontSize: '15px',
+                                padding: '16px 36px',
+                                borderRadius: '14px',
+                                fontWeight: 800,
+                                fontSize: '16px',
                                 cursor: isLoading ? 'not-allowed' : 'pointer',
                                 opacity: isLoading ? 0.7 : 1,
-                                boxShadow: `0 4px 20px ${colors.success}40, inset 0 1px 0 rgba(255,255,255,0.3)`,
-                                transition: 'all 0.3s ease',
-                                overflow: 'hidden'
+                                boxShadow: `
+                                    0 0 30px ${colors.success}40,
+                                    0 6px 25px rgba(0,0,0,0.3), 
+                                    inset 0 1px 0 rgba(255,255,255,0.4),
+                                    inset 0 -2px 10px rgba(0,0,0,0.2)
+                                `,
+                                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                overflow: 'hidden',
+                                textShadow: '0 2px 4px rgba(0,0,0,0.3)'
                             }}
-                            onMouseEnter={(e) => !isLoading && (e.currentTarget.style.transform = 'translateY(-2px)', e.currentTarget.style.boxShadow = `0 8px 30px ${colors.success}60`)}
-                            onMouseLeave={(e) => !isLoading && (e.currentTarget.style.transform = 'translateY(0)', e.currentTarget.style.boxShadow = `0 4px 20px ${colors.success}40`)}
+                            onMouseEnter={(e) => {
+                                if (!isLoading) {
+                                    e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'
+                                    e.currentTarget.style.boxShadow = `0 0 40px ${colors.success}60, 0 10px 35px rgba(0,0,0,0.4)`
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (!isLoading) {
+                                    e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                                    e.currentTarget.style.boxShadow = `0 0 30px ${colors.success}40, 0 6px 25px rgba(0,0,0,0.3)`
+                                }
+                            }}
                         >
+                            <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: '-100%',
+                                width: '100%',
+                                height: '100%',
+                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                                animation: 'extremeShimmer 3s infinite'
+                            }} />
                             {isLoading ? '⏳ Launching...' : '🚀 Launch Browser'}
                         </button>
                     ) : (
@@ -421,16 +638,27 @@ export default function WebAutomation() {
                                     background: `linear-gradient(135deg, ${colors.primary}, ${colors.primary}dd)`,
                                     color: 'white',
                                     border: 'none',
-                                    padding: '14px 28px',
-                                    borderRadius: '12px',
-                                    fontWeight: 700,
-                                    fontSize: '15px',
+                                    padding: '16px 32px',
+                                    borderRadius: '14px',
+                                    fontWeight: 800,
+                                    fontSize: '16px',
                                     cursor: isLoading ? 'not-allowed' : 'pointer',
-                                    boxShadow: `0 4px 20px ${colors.primary}40`,
-                                    transition: 'all 0.3s ease'
+                                    boxShadow: `0 0 30px ${colors.primary}40, 0 6px 25px rgba(0,0,0,0.3)`,
+                                    transition: 'all 0.3s ease',
+                                    overflow: 'hidden'
                                 }}
-                                onMouseEnter={(e) => !isLoading && (e.currentTarget.style.transform = 'scale(1.05)', e.currentTarget.style.boxShadow = `0 6px 25px ${colors.primary}60`)}
-                                onMouseLeave={(e) => !isLoading && (e.currentTarget.style.transform = 'scale(1)', e.currentTarget.style.boxShadow = `0 4px 20px ${colors.primary}40`)}
+                                onMouseEnter={(e) => {
+                                    if (!isLoading) {
+                                        e.currentTarget.style.transform = 'scale(1.05)'
+                                        e.currentTarget.style.boxShadow = `0 0 40px ${colors.primary}60, 0 8px 30px rgba(0,0,0,0.4)`
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!isLoading) {
+                                        e.currentTarget.style.transform = 'scale(1)'
+                                        e.currentTarget.style.boxShadow = `0 0 30px ${colors.primary}40, 0 6px 25px rgba(0,0,0,0.3)`
+                                    }
+                                }}
                             >
                                 {isLoading ? '⏳' : '→'} Go
                             </button>
@@ -440,16 +668,22 @@ export default function WebAutomation() {
                                     background: `linear-gradient(135deg, ${colors.error}, ${colors.error}dd)`,
                                     color: 'white',
                                     border: 'none',
-                                    padding: '14px 24px',
-                                    borderRadius: '12px',
-                                    fontWeight: 700,
-                                    fontSize: '15px',
+                                    padding: '16px 28px',
+                                    borderRadius: '14px',
+                                    fontWeight: 800,
+                                    fontSize: '16px',
                                     cursor: 'pointer',
-                                    boxShadow: `0 4px 20px ${colors.error}40`,
+                                    boxShadow: `0 0 30px ${colors.error}40, 0 6px 25px rgba(0,0,0,0.3)`,
                                     transition: 'all 0.3s ease'
                                 }}
-                                onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)', e.currentTarget.style.boxShadow = `0 6px 25px ${colors.error}60`)}
-                                onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)', e.currentTarget.style.boxShadow = `0 4px 20px ${colors.error}40`)}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'scale(1.05) rotate(5deg)'
+                                    e.currentTarget.style.boxShadow = `0 0 40px ${colors.error}60, 0 8px 30px rgba(0,0,0,0.4)`
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'scale(1) rotate(0deg)'
+                                    e.currentTarget.style.boxShadow = `0 0 30px ${colors.error}40, 0 6px 25px rgba(0,0,0,0.3)`
+                                }}
                             >
                                 ✕
                             </button>
@@ -457,48 +691,52 @@ export default function WebAutomation() {
                     )}
                 </div>
 
-                {/* Inspector & Page Info */}
                 {browserLaunched && (
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '16px',
-                        animation: 'slideIn 0.5s ease-out'
+                        gap: '20px',
+                        animation: 'slideIn 0.6s ease-out'
                     }}>
                         <label style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '10px',
+                            gap: '12px',
                             cursor: 'pointer',
-                            padding: '8px 16px',
-                            background: inspectorMode ? `${colors.primary}15` : 'transparent',
-                            borderRadius: '10px',
+                            padding: '10px 20px',
+                            background: inspectorMode
+                                ? `linear-gradient(135deg, ${colors.primary}20, ${colors.primary}10)`
+                                : 'transparent',
+                            borderRadius: '12px',
                             border: `2px solid ${inspectorMode ? colors.primary : 'transparent'}`,
-                            transition: 'all 0.3s ease'
+                            transition: 'all 0.4s ease',
+                            boxShadow: inspectorMode ? `0 0 25px ${colors.primary}30` : 'none'
                         }}>
                             <input
                                 type="checkbox"
                                 checked={inspectorMode}
                                 onChange={(e) => setInspectorMode(e.target.checked)}
-                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
                             />
-                            <span style={{ fontSize: '14px', fontWeight: 600 }}>
+                            <span style={{ fontSize: '15px', fontWeight: 700 }}>
                                 🔍 Inspector Mode
                             </span>
                         </label>
                         {pageTitle && (
                             <div style={{
                                 flex: 1,
-                                padding: '8px 16px',
-                                background: `${colors.blue}10`,
-                                borderRadius: '10px',
-                                border: `1px solid ${colors.blue}30`,
-                                fontSize: '14px',
-                                fontWeight: 500,
+                                padding: '10px 20px',
+                                background: `linear-gradient(135deg, ${colors.blue}15, ${colors.blue}08)`,
+                                borderRadius: '12px',
+                                border: `2px solid ${colors.blue}30`,
+                                fontSize: '15px',
+                                fontWeight: 600,
                                 color: colors.blue,
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
+                                whiteSpace: 'nowrap',
+                                boxShadow: `0 0 20px ${colors.blue}20, inset 0 1px 3px rgba(255,255,255,0.1)`,
+                                animation: 'titleGlow 3s ease-in-out infinite'
                             }}>
                                 📄 {pageTitle}
                             </div>
@@ -507,26 +745,49 @@ export default function WebAutomation() {
                 )}
             </div>
 
-            {/* Main Content with Premium Layout */}
+            {/* Main Content */}
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: '2fr 1fr',
-                gap: '24px',
-                height: 'calc(100vh - 360px)',
+                gap: '28px',
+                height: 'calc(100vh - 380px)',
                 position: 'relative',
                 zIndex: 1
             }}>
-                {/* Browser Viewer with Glass Effect */}
                 <div style={{
                     background: `linear-gradient(135deg, ${colors.bgSecondary}dd, ${colors.bgTertiary}dd)`,
-                    backdropFilter: 'blur(20px)',
+                    backdropFilter: 'blur(30px) saturate(180%)',
                     border: `1px solid ${colors.border}`,
-                    borderRadius: '20px',
+                    borderRadius: '24px',
                     overflow: 'hidden',
-                    boxShadow: `0 20px 60px rgba(0, 0, 0, 0.6), 
-                                inset 0 1px 0 rgba(255, 255, 255, 0.08)`,
-                    animation: 'scaleIn 0.5s ease-out'
+                    boxShadow: `
+                        0 0 60px rgba(0,0,0,0.3),
+                        0 25px 70px rgba(0, 0, 0, 0.7), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1)
+                    `,
+                    animation: 'scaleIn 0.6s ease-out',
+                    position: 'relative'
                 }}>
+                    {/* Corner accents */}
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100px',
+                        height: '100px',
+                        background: `radial-gradient(circle at top left, ${colors.primary}20, transparent)`,
+                        pointerEvents: 'none'
+                    }} />
+                    <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        right: 0,
+                        width: '100px',
+                        height: '100px',
+                        background: `radial-gradient(circle at bottom right, ${colors.cyan}20, transparent)`,
+                        pointerEvents: 'none'
+                    }} />
+
                     <BrowserViewer
                         screenshot={screenshot}
                         inspectorMode={inspectorMode}
@@ -534,12 +795,11 @@ export default function WebAutomation() {
                     />
                 </div>
 
-                {/* Right Panel */}
                 <div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '20px',
-                    animation: 'slideInRight 0.6s ease-out'
+                    gap: '24px',
+                    animation: 'slideInRight 0.7s ease-out'
                 }}>
                     <ControlPanel
                         browserLaunched={browserLaunched}
@@ -557,36 +817,87 @@ export default function WebAutomation() {
                 </div>
             </div>
 
-            {/* CSS Animations */}
+            {/* EXTREME CSS Animations */}
             <style>{`
-                @keyframes float {
-                    0%, 100% { transform: translateY(0) rotate(0deg); }
-                    50% { transform: translateY(-20px) rotate(5deg); }
+                @keyframes floatOrb1 {
+                    0%, 100% { transform: translate(0, 0); }
+                    33% { transform: translate(50px, -30px); }
+                    66% { transform: translate(-30px, 40px); }
                 }
-                @keyframes pulse {
-                    0%, 100% { transform: scale(1); }
-                    50% { transform: scale(1.05); }
+                @keyframes floatOrb2 {
+                    0%, 100% { transform: translate(0, 0); }
+                    33% { transform: translate(-40px, 50px); }
+                    66% { transform: translate(60px, -20px); }
                 }
-                @keyframes ping {
+                @keyframes floatOrb3 {
+                    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+                    50% { transform: translate(30px, -40px) rotate(180deg); }
+                }
+                @keyframes gridPulse {
+                    0%, 100% { opacity: 0.2; }
+                    50% { opacity: 0.4; }
+                }
+                @keyframes rotateBorder {
+                    0% { background-position: 0% 50%; }
+                    100% { background-position: 400% 50%; }
+                }
+                @keyframes extremePulse {
+                    0%, 100% { transform: scale(1) perspective(1000px) rotateY(0deg); box-shadow: 0 0 40px ${colors.primary}60, 0 0 80px ${colors.primary}30; }
+                    50% { transform: scale(1.08) perspective(1000px) rotateY(10deg); box-shadow: 0 0 60px ${colors.primary}80, 0 0 120px ${colors.primary}50; }
+                }
+                @keyframes rotate3D {
+                    0% { transform: perspective(1000px) rotateY(0deg); }
+                    100% { transform: perspective(1000px) rotateY(360deg); }
+                }
+                @keyframes shimmerText {
+                    0%, 100% { background-position: 0% 50%; }
+                    50% { background-position: 100% 50%; }
+                }
+                @keyframes statusGlow {
+                    0%, 100% { box-shadow: 0 0 30px ${colors.success}40, 0 8px 25px rgba(0,0,0,0.3); }
+                    50% { box-shadow: 0 0 50px ${colors.success}60, 0 12px 35px rgba(0,0,0,0.4); }
+                }
+                @keyframes extremePing {
                     0% { transform: scale(1); opacity: 1; }
-                    75%, 100% { transform: scale(2); opacity: 0; }
+                    100% { transform: scale(2.5); opacity: 0; }
+                }
+                @keyframes shimmerSweep {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(200%); }
+                }
+                @keyframes extremeSuccess {
+                    0% { opacity: 0; transform: scale(0) rotate(0deg) translateY(0); }
+                    30% { opacity: 1; transform: scale(1.5) rotate(180deg) translateY(-20px); }
+                    60% { opacity: 1; transform: scale(1.2) rotate(360deg) translateY(-40px); }
+                    100% { opacity: 0; transform: scale(2) rotate(720deg) translateY(-100px); }
+                }
+                @keyframes progressShimmer {
+                    0% { background-position: 0% 50%; }
+                    100% { background-position: 200% 50%; }
+                }
+                @keyframes iconFloat {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-8px); }
+                }
+                @keyframes extremeShimmer {
+                    0% { left: -100%; }
+                    100% { left: 200%; }
                 }
                 @keyframes slideIn {
-                    from { opacity: 0; transform: translateY(-10px); }
+                    from { opacity: 0; transform: translateY(-15px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
                 @keyframes slideInRight {
-                    from { opacity: 0; transform: translateX(20px); }
+                    from { opacity: 0; transform: translateX(30px); }
                     to { opacity: 1; transform: translateX(0); }
                 }
                 @keyframes scaleIn {
-                    from { opacity: 0; transform: scale(0.95); }
+                    from { opacity: 0; transform: scale(0.92); }
                     to { opacity: 1; transform: scale(1); }
                 }
-                @keyframes successPop {
-                    0% { opacity: 0; transform: scale(0) rotate(0deg); }
-                    50% { opacity: 1; transform: scale(1.5) rotate(180deg); }
-                    100% { opacity: 0; transform: scale(2) rotate(360deg); }
+                @keyframes titleGlow {
+                    0%, 100% { box-shadow: 0 0 20px ${colors.blue}20; }
+                    50% { box-shadow: 0 0 35px ${colors.blue}40; }
                 }
             `}</style>
         </div>
