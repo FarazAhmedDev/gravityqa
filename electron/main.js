@@ -49,9 +49,9 @@ function createWindow() {
     });
 
     // Load from Vite dev server in development or built files in production
-    const startURL = process.env.NODE_ENV === 'development'
-        ? 'http://localhost:5173'
-        : `file://${path.join(__dirname, '../dist/index.html')}`;
+    const startURL = app.isPackaged
+        ? `file://${path.join(__dirname, '../dist/index.html')}`
+        : 'http://localhost:5173';
 
     mainWindow.loadURL(startURL);
 
@@ -65,7 +65,7 @@ function createWindow() {
     });
 
     // Open DevTools in development
-    if (process.env.NODE_ENV === 'development') {
+    if (!app.isPackaged) {
         mainWindow.webContents.openDevTools();
     }
 

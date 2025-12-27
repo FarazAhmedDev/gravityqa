@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
+import { runTestWithReporting } from '../../utils/testRunner'
 
 interface Device {
     id: number
@@ -19,14 +20,35 @@ interface APKInfo {
 
 interface RecordedAction {
     step: number
-    action: string
+    action: 'tap' | 'swipe' | 'inspector_tap' | 'type_text' | 'wait' | 'wait_visible' | 'wait_clickable' | 'assert_visible' | 'assert_text'
     x?: number
     y?: number
-    text?: string
-    duration?: number  // For wait actions
+    x2?: number
+    y2?: number
+    duration?: number  // For wait/swipe actions
     element?: any  // For inspector mode - element properties
     description: string
     timestamp: number
+    enabled?: boolean
+
+    // TYPE_TEXT params
+    text?: string
+    clearBeforeType?: boolean
+    pressEnter?: boolean
+
+    // WAIT params
+    waitType?: 'visible' | 'clickable'
+    timeoutSec?: number
+
+    // ASSERT params
+    assertType?: 'visible' | 'text'
+    expectedText?: string
+
+    // RETRY params
+    retryCount?: number
+    retryDelayMs?: number
+    waitBefore?: number
+    waitAfter?: number
 }
 
 type WizardStep = 'device' | 'apk' | 'install' | 'launch' | 'record' | 'save' | 'playback'
@@ -90,6 +112,15 @@ export default function AutomationWizard() {
 
     // Mouse position for parallax
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+
+    // Step control states
+    const [editingStepIndex, setEditingStepIndex] = useState<number | null>(null)
+    const [showWaitModal, setShowWaitModal] = useState(false)
+    const [waitInsertPosition, setWaitInsertPosition] = useState<number>(0)
+
+    // Action management
+    const [showAddActionMenu, setShowAddActionMenu] = useState(false)
+    const [testRunReport, setTestRunReport] = useState<any>(null)
 
     // Modal state for errors
     const [modalState, setModalState] = useState<{
@@ -160,7 +191,7 @@ export default function AutomationWizard() {
             try {
                 const res = await axios.get('http://localhost:8000/api/inspector/screenshot')
                 if (res.data.screenshot) {
-                    setScreenshot(`data:image/png;base64,${res.data.screenshot}`)
+                    setScreenshot(`data: image / png; base64, ${res.data.screenshot} `)
                 }
             } catch (error) {
                 console.error('Screenshot refresh failed')
@@ -350,18 +381,44 @@ export default function AutomationWizard() {
             return;
         }
 
-        // Throttle API calls - only call every 100ms for better responsiveness
+        // Throttle API calls - only call every 200ms for smoother performance
         const now = Date.now()
-        if (now - (window as any)._lastInspectorHoverTime < 100) return
+        if (now - (window as any)._lastInspectorHoverTime < 200) return
         (window as any)._lastInspectorHoverTime = now
 
-        const rect = e.currentTarget.getBoundingClientRect()
         const img = e.currentTarget as HTMLImageElement
+        const rect = img.getBoundingClientRect()
 
-        const scaleX = img.naturalWidth / img.width
-        const scaleY = img.naturalHeight / img.height
-        const x = Math.round((e.clientX - rect.left) * scaleX)
-        const y = Math.round((e.clientY - rect.top) * scaleY)
+        // Proper coordinate transformation with letterbox handling
+        const xInBox = e.clientX - rect.left
+        const yInBox = e.clientY - rect.top
+
+        const natW = img.naturalWidth
+        const natH = img.naturalHeight
+        const dispW = rect.width
+        const dispH = rect.height
+
+        // Calculate object-fit: contain scale
+        const scale = Math.min(dispW / natW, dispH / natH)
+        const drawW = natW * scale
+        const drawH = natH * scale
+
+        // Calculate letterbox offset
+        const padX = (dispW - drawW) / 2
+        const padY = (dispH - drawH) / 2
+
+        // Position inside actual drawn image
+        const xInImage = xInBox - padX
+        const yInImage = yInBox - padY
+
+        // Ignore letterbox area
+        if (xInImage < 0 || yInImage < 0 || xInImage > drawW || yInImage > drawH) {
+            return
+        }
+
+        // Convert to screenshot pixel coords
+        const x = Math.round(xInImage / scale)
+        const y = Math.round(yInImage / scale)
 
         console.log('[Inspector] Hover at:', x, y)
 
@@ -395,12 +452,22 @@ export default function AutomationWizard() {
         const x = Math.round((e.clientX - rect.left) * scaleX)
         const y = Math.round((e.clientY - rect.top) * scaleY)
 
+        // Create selector for code generation
+        const selector = hoveredElement.resource_id
+            ? { strategy: 'id', value: hoveredElement.resource_id }
+            : hoveredElement.xpath
+                ? { strategy: 'xpath', value: hoveredElement.xpath }
+                : null;
+
         const action: RecordedAction = {
             step: actions.length + 1,
             action: 'tap',
             x,
             y,
-            element: hoveredElement,
+            element: {
+                ...hoveredElement,
+                selector: selector
+            },
             description: `🔍 Tap ${hoveredElement.class?.split('.').pop()} "${hoveredElement.text || hoveredElement.resource_id || 'element'}"`,
             timestamp: Date.now()
         }
@@ -413,6 +480,60 @@ export default function AutomationWizard() {
         } catch (error) {
             console.error('Tap execution failed:', error)
         }
+    }
+
+    // STEP CONTROL HANDLERS
+    const handleToggleStep = (index: number) => {
+        const newActions = [...actions]
+        newActions[index].enabled = !newActions[index].enabled
+        setActions(newActions)
+    }
+
+    const handleDeleteStep = (index: number) => {
+        const newActions = actions.filter((_, i) => i !== index)
+        newActions.forEach((action, i) => {
+            action.step = i + 1
+        })
+        setActions(newActions)
+    }
+
+    const handleOpenWaitModal = (position: number) => {
+        setWaitInsertPosition(position)
+        setShowWaitModal(true)
+    }
+
+    const handleAddWait = (duration: number) => {
+        const newWaitAction: RecordedAction = {
+            step: waitInsertPosition + 1,
+            action: 'wait',
+            duration,
+            description: `⏱️ Wait ${duration}s`,
+            timestamp: Date.now(),
+            enabled: true
+        }
+
+        const newActions = [...actions]
+        newActions.splice(waitInsertPosition, 0, newWaitAction)
+
+        newActions.forEach((action, i) => {
+            action.step = i + 1
+        })
+
+        setActions(newActions)
+        setShowWaitModal(false)
+    }
+
+    // ACTION MANAGEMENT HELPERS
+    const updateActionText = (index: number, text: string) => {
+        const newActions = [...actions]
+        newActions[index].text = text
+        setActions(newActions)
+    }
+
+    const updateActionParam = (index: number, param: string, value: any) => {
+        const newActions = [...actions]
+        newActions[index] = { ...newActions[index], [param]: value }
+        setActions(newActions)
     }
 
     // SWIPE RECORDING HANDLERS
@@ -914,7 +1035,11 @@ export default function AutomationWizard() {
                             <input
                                 ref={fileInputRef}
                                 type="file"
-                                accept=".apk"
+                                accept={
+                                    devices.find(d => d.device_id === selectedDevice)?.platform === 'ios'
+                                        ? '.ipa'
+                                        : '.apk,.aab'
+                                }
                                 onChange={(e) => {
                                     const file = e.target.files?.[0]
                                     if (file) handleAPKUpload(file)
@@ -1532,14 +1657,37 @@ export default function AutomationWizard() {
                                     const imgElement = document.querySelector('img[alt="Device Screen"]') as HTMLImageElement;
                                     if (!imgElement) return null;
 
-                                    const scaleX = imgElement.naturalWidth / imgElement.width;
-                                    const scaleY = imgElement.naturalHeight / imgElement.height;
+                                    const parent = imgElement.parentElement;
+                                    if (!parent) return null;
+
+                                    const imgRect = imgElement.getBoundingClientRect();
+                                    const parentRect = parent.getBoundingClientRect();
+
+                                    const imgLeft = imgRect.left - parentRect.left;
+                                    const imgTop = imgRect.top - parentRect.top;
+
+                                    const natW = imgElement.naturalWidth;
+                                    const natH = imgElement.naturalHeight;
+                                    const dispW = imgRect.width;
+                                    const dispH = imgRect.height;
+
+                                    const scale = Math.min(dispW / natW, dispH / natH);
+                                    const drawW = natW * scale;
+                                    const drawH = natH * scale;
+
+                                    const padX = (dispW - drawW) / 2;
+                                    const padY = (dispH - drawH) / 2;
 
                                     const bounds = hoveredElement.bounds;
-                                    const left = bounds.x1 / scaleX;
-                                    const top = bounds.y1 / scaleY;
-                                    const width = (bounds.x2 - bounds.x1) / scaleX;
-                                    const height = (bounds.y2 - bounds.y1) / scaleY;
+
+                                    // Bounds are in screenshot pixels
+                                    const leftInImg = padX + (bounds.x1 * scale);
+                                    const topInImg = padY + (bounds.y1 * scale);
+                                    const width = (bounds.x2 - bounds.x1) * scale;
+                                    const height = (bounds.y2 - bounds.y1) * scale;
+
+                                    const left = imgLeft + leftInImg;
+                                    const top = imgTop + topInImg;
 
                                     return (
                                         <div style={{
@@ -1554,69 +1702,10 @@ export default function AutomationWizard() {
                                             zIndex: 999,
                                             boxShadow: '0 0 10px rgba(48, 169, 222, 0.6), inset 0 0 10px rgba(48, 169, 222, 0.1)',
                                             background: 'rgba(48, 169, 222, 0.05)',
-                                            transition: 'all 0.15s ease-out'
+                                            transition: 'all 0.1s ease-out'
                                         }} />
                                     );
                                 })()
-                            )}
-                            {/* Selected Element Panel - Appium Inspector Style */}
-                            {recordingMode === 'inspector' && hoveredElement && (
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '20px',
-                                    right: '20px',
-                                    width: '340px',
-                                    maxHeight: 'calc(100vh - 280px)',
-                                    background: 'linear-gradient(135deg, #0d1117, #161b22)',
-                                    border: '2px solid #30a9de',
-                                    borderRadius: '12px',
-                                    boxShadow: '0 8px 32px rgba(48, 169, 222, 0.5)',
-                                    zIndex: 2000,
-                                    overflow: 'hidden'
-                                }}>
-                                    <div style={{
-                                        padding: '14px 16px',
-                                        background: '#30a9de',
-                                        color: 'white',
-                                        fontSize: '14px',
-                                        fontWeight: 700
-                                    }}>
-                                        🎯 Selected Element
-                                    </div>
-                                    <div style={{ padding: '16px', maxHeight: 'calc(100vh - 360px)', overflowY: 'auto' }}>
-                                        {hoveredElement.resource_id && (
-                                            <div style={{ marginBottom: '12px', padding: '10px', background: '#161b22', borderRadius: '6px' }}>
-                                                <div style={{ fontSize: '10px', color: '#8b949e', marginBottom: '4px' }}>ID</div>
-                                                <div style={{ color: '#58a6ff', fontSize: '11px', fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                                                    {hoveredElement.resource_id}
-                                                </div>
-                                            </div>
-                                        )}
-                                        <div style={{ marginBottom: '12px', padding: '10px', background: '#161b22', borderRadius: '6px' }}>
-                                            <div style={{ fontSize: '10px', color: '#8b949e', marginBottom: '4px' }}>CLASS</div>
-                                            <div style={{ color: '#58a6ff', fontSize: '11px', fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                                                {hoveredElement.class || 'N/A'}
-                                            </div>
-                                        </div>
-                                        {hoveredElement.xpath && (
-                                            <div style={{ marginBottom: '12px', padding: '10px', background: '#161b22', borderRadius: '6px' }}>
-                                                <div style={{ fontSize: '10px', color: '#8b949e', marginBottom: '4px' }}>XPATH</div>
-                                                <div style={{ color: '#58a6ff', fontSize: '10px', fontFamily: 'monospace', wordBreak: 'break-all', maxHeight: '50px', overflowY: 'auto' }}>
-                                                    {hoveredElement.xpath}
-                                                </div>
-                                            </div>
-                                        )}
-                                        {hoveredElement.text && (
-                                            <div style={{ marginBottom: '8px', fontSize: '11px' }}>
-                                                <span style={{ color: '#8b949e' }}>text: </span>
-                                                <span style={{ color: '#c9d1d9' }}>"{hoveredElement.text}"</span>
-                                            </div>
-                                        )}
-                                        <div style={{ fontSize: '11px', color: '#8b949e', marginTop: '12px' }}>
-                                            clickable: <span style={{ color: hoveredElement.clickable ? '#2ea043' : '#f85149' }}>{hoveredElement.clickable ? 'true' : 'false'}</span>
-                                        </div>
-                                    </div>
-                                </div>
                             )}
                         </div>
 
@@ -1646,6 +1735,126 @@ export default function AutomationWizard() {
                                 }}>
                                     📋 Recorded Actions ({actions.length})
                                 </h3>
+
+                                {/* Selected Element Panel (Inspector Mode) */}
+                                {recordingMode === 'inspector' && hoveredElement && (
+                                    <div style={{
+                                        marginBottom: '20px',
+                                        background: 'linear-gradient(135deg, #0d1117, #161b22)',
+                                        border: '2px solid #30a9de',
+                                        borderRadius: '12px',
+                                        boxShadow: '0 8px 32px rgba(48, 169, 222, 0.5)',
+                                        overflow: 'hidden'
+                                    }}>
+                                        <div style={{
+                                            padding: '12px 16px',
+                                            background: '#30a9de',
+                                            color: 'white',
+                                            fontSize: '13px',
+                                            fontWeight: 700
+                                        }}>
+                                            🎯 Selected Element
+                                        </div>
+                                        <div style={{ padding: '14px', maxHeight: '220px', overflowY: 'auto' }}>
+                                            {hoveredElement.resource_id && (
+                                                <div style={{ marginBottom: '10px', padding: '8px', background: '#161b22', borderRadius: '6px' }}>
+                                                    <div style={{ fontSize: '9px', color: '#8b949e', marginBottom: '3px' }}>ID</div>
+                                                    <div style={{ color: '#58a6ff', fontSize: '10px', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                                                        {hoveredElement.resource_id}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div style={{ marginBottom: '10px', padding: '8px', background: '#161b22', borderRadius: '6px' }}>
+                                                <div style={{ fontSize: '9px', color: '#8b949e', marginBottom: '3px' }}>CLASS</div>
+                                                <div style={{ color: '#58a6ff', fontSize: '10px', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                                                    {hoveredElement.class || 'N/A'}
+                                                </div>
+                                            </div>
+                                            {hoveredElement.xpath && (
+                                                <div style={{ marginBottom: '10px', padding: '8px', background: '#161b22', borderRadius: '6px' }}>
+                                                    <div style={{ fontSize: '9px', color: '#8b949e', marginBottom: '3px' }}>XPATH</div>
+                                                    <div style={{ color: '#58a6ff', fontSize: '9px', fontFamily: 'monospace', wordBreak: 'break-all', maxHeight: '40px', overflowY: 'auto' }}>
+                                                        {hoveredElement.xpath}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {hoveredElement.text && (
+                                                <div style={{ marginBottom: '6px', fontSize: '10px' }}>
+                                                    <span style={{ color: '#8b949e' }}>text: </span>
+                                                    <span style={{ color: '#c9d1d9' }}>"{hoveredElement.text}"</span>
+                                                </div>
+                                            )}
+                                            <div style={{ fontSize: '10px', color: '#8b949e', marginTop: '10px' }}>
+                                                clickable: <span style={{ color: hoveredElement.clickable ? '#2ea043' : '#f85149' }}>{hoveredElement.clickable ? 'true' : 'false'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Run Test Button - Execute actions with retry logic */}
+                                {!isRecording && actions.length > 0 && (
+                                    <button
+                                        onClick={async () => {
+                                            setIsPlaying(true)
+                                            setPlaybackProgress(0)
+
+                                            await runTestWithReporting(
+                                                actions,
+                                                selectedDevice,
+                                                (progress, status) => {
+                                                    setPlaybackProgress(progress)
+                                                    setStatus(status)
+                                                },
+                                                (report) => {
+                                                    setTestRunReport(report)
+                                                    setIsPlaying(false)
+
+                                                    if (report.status === 'passed') {
+                                                        setStatus(`✅ Test passed! All ${actions.length} actions executed successfully`)
+                                                    } else {
+                                                        setStatus(`❌ Test failed: ${report.error}`)
+                                                    }
+                                                }
+                                            )
+                                        }}
+                                        disabled={isPlaying}
+                                        style={{
+                                            width: '100%',
+                                            padding: '16px 24px',
+                                            marginBottom: '12px',
+                                            background: isPlaying
+                                                ? 'linear-gradient(135deg, #6e7681, #484f58)'
+                                                : 'linear-gradient(135deg, #2ea043 0%, #1f883d 100%)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '12px',
+                                            cursor: isPlaying ? 'not-allowed' : 'pointer',
+                                            fontWeight: 700,
+                                            fontSize: '15px',
+                                            boxShadow: '0 0 20px rgba(46, 160, 67, 0.4), 0 4px 12px rgba(0,0,0,0.3)',
+                                            transition: 'all 0.3s',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '10px',
+                                            opacity: isPlaying ? 0.6 : 1
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (!isPlaying) {
+                                                e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)'
+                                                e.currentTarget.style.boxShadow = '0 0 30px rgba(46, 160, 67, 0.6), 0 8px 20px rgba(0,0,0,0.4)'
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(0) scale(1)'
+                                            e.currentTarget.style.boxShadow = '0 0 20px rgba(46, 160, 67, 0.4), 0 4px 12px rgba(0,0,0,0.3)'
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '20px' }}>{isPlaying ? '⏳' : '▶️'}</span>
+                                        <span>{isPlaying ? 'Running Test...' : 'Run Test'}</span>
+                                        {isPlaying && <span style={{ fontSize: '12px' }}>({Math.round(playbackProgress)}%)</span>}
+                                    </button>
+                                )}
 
                                 {/* Open in Code Editor Button - Only shows AFTER recording stops */}
                                 {!isRecording && actions.length > 0 && (
@@ -1743,11 +1952,489 @@ export default function AutomationWizard() {
                                             }}>
                                                 {action.description}
                                             </div>
+
+                                            
+                                            {/* Action Type Selector - Convert tap to other action types */}
+                                            {(action.action === 'tap' || action.action === 'inspector_tap') && action.element && (
+                                                <div style={{ marginTop: '12px', marginBottom: '12px' }}>
+                                                    <label style={{ fontSize: '11px', color: '#8b949e', display: 'block', marginBottom: '6px' }}>
+                                                        🔄 Change Action Type
+                                                    </label>
+                                                    <select
+                                                        value={action.action}
+                                                        onChange={(e) => {
+                                                            const newActions = [...actions]
+                                                            const idx = actions.indexOf(action)
+                                                            newActions[idx] = {
+                                                                ...newActions[idx],
+                                                                action: e.target.value as any,
+                                                                description: e.target.value === 'type_text' 
+                                                                    ? '⌨️ Type Text'
+                                                                    : e.target.value === 'wait_visible'
+                                                                    ? '⏱️ Wait Visible'
+                                                                    : e.target.value === 'wait_clickable'
+                                                                    ? '⏱️ Wait Clickable'
+                                                                    : e.target.value === 'assert_visible'
+                                                                    ? '✓ Assert Visible'
+                                                                    : e.target.value === 'assert_text'
+                                                                    ? '✓ Assert Text'
+                                                                    : action.description
+                                                            }
+                                                            setActions(newActions)
+                                                        }}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '10px',
+                                                            background: '#161b22',
+                                                            color: '#e6edf3',
+                                                            border: '1px solid #30363d',
+                                                            borderRadius: '6px',
+                                                            fontSize: '13px',
+                                                            cursor: 'pointer',
+                                                            fontWeight: 600
+                                                        }}
+                                                    >
+                                                        <option value="tap">👆 Tap</option>
+                                                        <option value="inspector_tap">👆 Inspector Tap</option>
+                                                        <option value="type_text">⌨️ Type Text</option>
+                                                        <option value="wait_visible">⏱️ Wait Visible</option>
+                                                        <option value="wait_clickable">⏱️ Wait Clickable</option>
+                                                        <option value="assert_visible">✓ Assert Visible</option>
+                                                        <option value="assert_text">✓ Assert Text</option>
+                                                    </select>
+                                                </div>
+                                            )}
+
+{/* TYPE_TEXT UI */}
+                                            {action.action === 'type_text' && (
+                                                <div style={{ marginTop: '12px', padding: '12px', background: '#0d1117', borderRadius: '8px' }}>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Enter text to type..."
+                                                        value={action.text || ''}
+                                                        onChange={(e) => updateActionText(actions.indexOf(action), e.target.value)}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '10px',
+                                                            background: '#161b22',
+                                                            color: '#e6edf3',
+                                                            border: '1px solid #30363d',
+                                                            borderRadius: '6px',
+                                                            fontSize: '13px',
+                                                            marginBottom: '10px'
+                                                        }}
+                                                    />
+                                                    <div style={{ display: 'flex', gap: '12px', fontSize: '12px' }}>
+                                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8b949e', cursor: 'pointer' }}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={action.clearBeforeType || false}
+                                                                onChange={(e) => updateActionParam(actions.indexOf(action), 'clearBeforeType', e.target.checked)}
+                                                            />
+                                                            Clear before type
+                                                        </label>
+                                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#8b949e', cursor: 'pointer' }}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={action.pressEnter || false}
+                                                                onChange={(e) => updateActionParam(actions.indexOf(action), 'pressEnter', e.target.checked)}
+                                                            />
+                                                            Press Enter
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* WAIT UI */}
+                                            {(action.action === 'wait_visible' || action.action === 'wait_clickable') && (
+                                                <div style={{ marginTop: '12px', padding: '12px', background: '#0d1117', borderRadius: '8px' }}>
+                                                    <label style={{ fontSize: '11px', color: '#8b949e', display: 'block', marginBottom: '6px' }}>
+                                                        Timeout (seconds)
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        max="60"
+                                                        value={action.timeoutSec || 10}
+                                                        onChange={(e) => updateActionParam(actions.indexOf(action), 'timeoutSec', parseInt(e.target.value))}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '8px',
+                                                            background: '#161b22',
+                                                            color: '#e6edf3',
+                                                            border: '1px solid #30363d',
+                                                            borderRadius: '6px',
+                                                            fontSize: '13px'
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* ASSERT UI */}
+                                            {action.action === 'assert_text' && (
+                                                <div style={{ marginTop: '12px', padding: '12px', background: '#0d1117', borderRadius: '8px' }}>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Expected text..."
+                                                        value={action.expectedText || ''}
+                                                        onChange={(e) => updateActionParam(actions.indexOf(action), 'expectedText', e.target.value)}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '10px',
+                                                            background: '#161b22',
+                                                            color: '#e6edf3',
+                                                            border: '1px solid #30363d',
+                                                            borderRadius: '6px',
+                                                            fontSize: '13px',
+                                                            marginBottom: '8px'
+                                                        }}
+                                                    />
+                                                    <label style={{ fontSize: '11px', color: '#8b949e', display: 'block', marginBottom: '6px' }}>
+                                                        Timeout (seconds)
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        max="60"
+                                                        value={action.timeoutSec || 10}
+                                                        onChange={(e) => updateActionParam(actions.indexOf(action), 'timeoutSec', parseInt(e.target.value))}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '8px',
+                                                            background: '#161b22',
+                                                            color: '#e6edf3',
+                                                            border: '1px solid #30363d',
+                                                            borderRadius: '6px',
+                                                            fontSize: '13px'
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {action.action === 'assert_visible' && (
+                                                <div style={{ marginTop: '12px', padding: '12px', background: '#0d1117', borderRadius: '8px' }}>
+                                                    <label style={{ fontSize: '11px', color: '#8b949e', display: 'block', marginBottom: '6px' }}>
+                                                        Timeout (seconds)
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        max="60"
+                                                        value={action.timeoutSec || 10}
+                                                        onChange={(e) => updateActionParam(actions.indexOf(action), 'timeoutSec', parseInt(e.target.value))}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '8px',
+                                                            background: '#161b22',
+                                                            color: '#e6edf3',
+                                                            border: '1px solid #30363d',
+                                                            borderRadius: '6px',
+                                                            fontSize: '13px'
+                                                        }}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* RETRY CONFIGURATION (All actions) */}
+                                            <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(88, 166, 255, 0.05)', border: '1px solid rgba(88, 166, 255, 0.1)', borderRadius: '8px' }}>
+                                                <div style={{ fontSize: '11px', color: '#58a6ff', marginBottom: '10px', fontWeight: 600 }}>
+                                                    🔄 Retry on Failure
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '12px' }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <label style={{ fontSize: '10px', color: '#8b949e', display: 'block', marginBottom: '4px' }}>
+                                                            Retry Count
+                                                        </label>
+                                                        <select
+                                                            value={action.retryCount || 0}
+                                                            onChange={(e) => updateActionParam(actions.indexOf(action), 'retryCount', parseInt(e.target.value))}
+                                                            style={{
+                                                                width: '100%',
+                                                                padding: '6px',
+                                                                background: '#161b22',
+                                                                color: '#e6edf3',
+                                                                border: '1px solid #30363d',
+                                                                borderRadius: '6px',
+                                                                fontSize: '12px',
+                                                                cursor: 'pointer'
+                                                            }}
+                                                        >
+                                                            <option value="0">No retry</option>
+                                                            <option value="1">1 retry</option>
+                                                            <option value="2">2 retries</option>
+                                                            <option value="3">3 retries</option>
+                                                        </select>
+                                                    </div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <label style={{ fontSize: '10px', color: '#8b949e', display: 'block', marginBottom: '4px' }}>
+                                                            Delay (ms)
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            min="100"
+                                                            max="5000"
+                                                            step="100"
+                                                            value={action.retryDelayMs || 500}
+                                                            onChange={(e) => updateActionParam(actions.indexOf(action), 'retryDelayMs', parseInt(e.target.value))}
+                                                            disabled={!action.retryCount || action.retryCount === 0}
+                                                            style={{
+                                                                width: '100%',
+                                                                padding: '6px',
+                                                                background: '#161b22',
+                                                                color: '#e6edf3',
+                                                                border: '1px solid #30363d',
+                                                                borderRadius: '6px',
+                                                                fontSize: '12px',
+                                                                opacity: (!action.retryCount || action.retryCount === 0) ? 0.5 : 1
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         )}
+
+                        {/* Wait Modal */}
+                        {showWaitModal && (
+                            <div style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                background: 'rgba(0, 0, 0, 0.8)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                zIndex: 10000
+                            }}
+                                onClick={() => setShowWaitModal(false)}
+                            >
+                                <div
+                                    style={{
+                                        background: 'linear-gradient(135deg, #161b22, #0d1117)',
+                                        padding: '32px',
+                                        borderRadius: '16px',
+                                        border: '2px solid #30a9de',
+                                        boxShadow: '0 20px 60px rgba(48, 169, 222, 0.4)',
+                                        minWidth: '400px'
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <h3 style={{ margin: '0 0 24px 0', color: '#e6edf3', fontSize: '20px' }}>
+                                        ⏱️ Insert Wait Step
+                                    </h3>
+
+                                    <div style={{ marginBottom: '24px' }}>
+                                        <label style={{ display: 'block', marginBottom: '8px', color: '#8b949e', fontSize: '13px' }}>
+                                            Duration (seconds)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="wait-duration"
+                                            defaultValue="2"
+                                            min="1"
+                                            max="60"
+                                            style={{
+                                                width: '100%',
+                                                padding: '12px',
+                                                background: '#0d1117',
+                                                border: '1px solid #30363d',
+                                                borderRadius: '8px',
+                                                color: '#e6edf3',
+                                                fontSize: '16px'
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                        <button
+                                            onClick={() => setShowWaitModal(false)}
+                                            style={{
+                                                flex: 1,
+                                                padding: '12px',
+                                                background: 'rgba(110, 118, 129, 0.1)',
+                                                border: '1px solid #30363d',
+                                                borderRadius: '8px',
+                                                color: '#8b949e',
+                                                cursor: 'pointer',
+                                                fontWeight: 600
+                                            }}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const input = document.getElementById('wait-duration') as HTMLInputElement
+                                                const duration = parseInt(input.value) || 2
+                                                handleAddWait(duration)
+                                            }}
+                                            style={{
+                                                flex: 1,
+                                                padding: '12px',
+                                                background: 'linear-gradient(135deg, #2ea043, #238636)',
+                                                border: 'none',
+                                                borderRadius: '8px',
+                                                color: '#fff',
+                                                cursor: 'pointer',
+                                                fontWeight: 600
+                                            }}
+                                        >
+                                            ✓ Add Wait
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Test Run Report Panel */}
+                        {testRunReport && (
+                            <div style={{
+                                position: 'fixed',
+                                top: 0,
+                                right: 0,
+                                width: '450px',
+                                height: '100vh',
+                                background: 'linear-gradient(135deg, #0d1117, #161b22)',
+                                borderLeft: '2px solid #30363d',
+                                padding: '24px',
+                                overflowY: 'auto',
+                                zIndex: 10000,
+                                boxShadow: '-10px 0 40px rgba(0,0,0,0.5)'
+                            }}>
+                                {/* Header */}
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: '24px'
+                                }}>
+                                    <h2 style={{
+                                        fontSize: '20px',
+                                        margin: 0,
+                                        color: testRunReport.status === 'passed' ? '#3fb950' : '#f85149',
+                                        fontWeight: 700
+                                    }}>
+                                        {testRunReport.status === 'passed' ? '✅ Test Passed' : '❌ Test Failed'}
+                                    </h2>
+                                    <button
+                                        onClick={() => setTestRunReport(null)}
+                                        style={{
+                                            background: 'transparent',
+                                            border: '1px solid #30363d',
+                                            color: '#8b949e',
+                                            borderRadius: '6px',
+                                            padding: '6px 12px',
+                                            cursor: 'pointer',
+                                            fontSize: '14px'
+                                        }}
+                                    >
+                                        ✕ Close
+                                    </button>
+                                </div>
+
+                                {/* Failed Step Highlight */}
+                                {testRunReport.failedStep && (
+                                    <div style={{
+                                        padding: '16px',
+                                        background: 'rgba(248, 81, 73, 0.1)',
+                                        border: '1px solid #f85149',
+                                        borderRadius: '8px',
+                                        marginBottom: '20px'
+                                    }}>
+                                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#f85149', marginBottom: '8px' }}>
+                                            Failed at Step {testRunReport.failedStep.step}
+                                        </div>
+                                        <div style={{ fontSize: '12px', color: '#e6edf3', marginBottom: '8px' }}>
+                                            {testRunReport.failedStep.description}
+                                        </div>
+                                        <div style={{
+                                            fontSize: '11px',
+                                            color: '#f85149',
+                                            fontFamily: 'monospace',
+                                            background: '#0d1117',
+                                            padding: '8px',
+                                            borderRadius: '4px',
+                                            marginTop: '8px'
+                                        }}>
+                                            {testRunReport.error}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Failure Screenshot */}
+                                {testRunReport.screenshot && (
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#8b949e', marginBottom: '8px' }}>
+                                            📸 Failure Screenshot
+                                        </div>
+                                        <img
+                                            src={`data:image/png;base64,${testRunReport.screenshot}`}
+                                            style={{
+                                                width: '100%',
+                                                borderRadius: '8px',
+                                                border: '1px solid #30363d'
+                                            }}
+                                            alt="Failure screenshot"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Execution Logs */}
+                                <div>
+                                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#8b949e', marginBottom: '8px' }}>
+                                        📋 Execution Logs
+                                    </div>
+                                    <div style={{
+                                        background: '#0d1117',
+                                        borderRadius: '8px',
+                                        padding: '12px',
+                                        maxHeight: '400px',
+                                        overflowY: 'auto',
+                                        fontSize: '11px',
+                                        fontFamily: 'monospace',
+                                        border: '1px solid #30363d'
+                                    }}>
+                                        {testRunReport.logs && testRunReport.logs.length > 0 ? (
+                                            testRunReport.logs.map((log: any, idx: number) => (
+                                                <div key={idx} style={{
+                                                    padding: '4px 0',
+                                                    color: log.success ? '#3fb950' : '#f85149',
+                                                    borderBottom: idx < testRunReport.logs.length - 1 ? '1px solid #21262d' : 'none'
+                                                }}>
+                                                    {log.message}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div style={{ color: '#8b949e' }}>No logs available</div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Summary */}
+                                <div style={{
+                                    marginTop: '20px',
+                                    padding: '16px',
+                                    background: '#161b22',
+                                    borderRadius: '8px',
+                                    border: '1px solid #30363d'
+                                }}>
+                                    <div style={{ fontSize: '12px', color: '#8b949e', marginBottom: '8px' }}>
+                                        Test Summary
+                                    </div>
+                                    <div style={{ fontSize: '14px', color: '#e6edf3' }}>
+                                        {testRunReport.status === 'passed'
+                                            ? `All actions executed successfully! 🎉`
+                                            : `Test failed. Review logs above for details.`
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
 
                         {/* RIGHT: Control Panel */}
                         <div style={{
@@ -3032,7 +3719,7 @@ export default function AutomationWizard() {
                             background: 'radial-gradient(circle, rgba(88,166,255,0.1) 0%, transparent 70%)',
                             animation: 'rotate 20s linear infinite'
                         }} />
-                        
+
                         {/* Success Icon with Animation */}
                         <div style={{
                             width: '120px',

@@ -118,6 +118,80 @@ def generate_javascript_code(actions: list, app_package: str = None, app_activit
             duration = action.get('duration', 1000)
             code_lines.append(f"        await driver.pause({duration});")
         
+        elif action_type == 'type_text':
+            element = action.get('element', {})
+            selector = element.get('selector', {})
+            text = action.get('text', '')
+            clear_before = action.get('clearBeforeType', False)
+            press_enter = action.get('pressEnter', False)
+            
+            code_lines.append(f"        // Type text")
+            
+            if selector and selector.get('value'):
+                strategy = selector.get('strategy', 'xpath')
+                value = selector.get('value', '')
+                
+                if strategy == 'id':
+                    code_lines.append(f"        const elem{i} = await driver.$('id={value}');")
+                else:
+                    code_lines.append(f"        const elem{i} = await driver.$('{value}');")
+                
+                if clear_before:
+                    code_lines.append(f"        await elem{i}.clearValue();")
+                
+                code_lines.append(f"        await elem{i}.setValue('{text}');")
+                
+                if press_enter:
+                    code_lines.append(f"        await elem{i}.addValue('\\n');")
+            else:
+                code_lines.append(f"        // Note: TYPE_TEXT requires element locator")
+        
+        elif action_type == 'wait_visible' or action_type == 'wait_clickable':
+            element = action.get('element', {})
+            selector = element.get('selector', {})
+            timeout_sec = action.get('timeoutSec', 10)
+            timeout_ms = timeout_sec * 1000
+            
+            if selector and selector.get('value'):
+                strategy = selector.get('strategy', 'xpath')
+                value = selector.get('value', '')
+                wait_condition = 'waitForDisplayed' if action_type == 'wait_visible' else 'waitForClickable'
+                
+                code_lines.append(f"        // Wait for element to be {action_type.split('_')[1]}")
+                
+                if strategy == 'id':
+                    code_lines.append(f"        await driver.$('id={value}').{wait_condition}({{ timeout: {timeout_ms} }});")
+                else:
+                    code_lines.append(f"        await driver.$('{value}').{wait_condition}({{ timeout: {timeout_ms} }});")
+        
+        elif action_type == 'assert_visible' or action_type == 'assert_text':
+            element = action.get('element', {})
+            selector = element.get('selector', {})
+            expected_text = action.get('expectedText', '')
+            timeout_sec = action.get('timeoutSec', 10)
+            timeout_ms = timeout_sec * 1000
+            
+            if selector and selector.get('value'):
+                strategy = selector.get('strategy', 'xpath')
+                value = selector.get('value', '')
+                
+                code_lines.append(f"        // Assert {action_type.split('_')[1]}")
+                
+                if action_type == 'assert_visible':
+                    if strategy == 'id':
+                        code_lines.append(f"        await driver.$('id={value}').waitForDisplayed({{ timeout: {timeout_ms} }});")
+                    else:
+                        code_lines.append(f"        await driver.$('{value}').waitForDisplayed({{ timeout: {timeout_ms} }});")
+                else:  # assert_text
+                    if strategy == 'id':
+                        code_lines.append(f"        const actualText{i} = await driver.$('id={value}').getText();")
+                    else:
+                        code_lines.append(f"        const actualText{i} = await driver.$('{value}').getText();")
+                    
+                    code_lines.append(f"        if (actualText{i} !== '{expected_text}') {{")
+                    code_lines.append(f"            throw new Error(`Expected '{expected_text}' but got '${{actualText{i}}}'`);")
+                    code_lines.append(f"        }}")
+        
         code_lines.append("")
     
     code_lines.extend([
@@ -250,6 +324,87 @@ def generate_python_code(actions: list, app_package: str = None, app_activity: s
         elif action_type == 'wait':
             duration = action.get('duration', 1000)
             code_lines.append(f"        time.sleep({duration / 1000})")
+        
+        elif action_type == 'type_text':
+            element = action.get('element', {})
+            selector = element.get('selector', {})
+            text = action.get('text', '')
+            clear_before = action.get('clearBeforeType', False)
+            press_enter = action.get('pressEnter', False)
+            
+            code_lines.append(f"        # Type text")
+            
+            if selector and selector.get('value'):
+                strategy = selector.get('strategy', 'xpath')
+                value = selector.get('value', '')
+                
+                if strategy == 'id':
+                    code_lines.append(f"        elem{i} = driver.find_element(AppiumBy.ID, '{value}')")
+                else:
+                    code_lines.append(f"        elem{i} = driver.find_element(AppiumBy.XPATH, '{value}')")
+                
+                if clear_before:
+                    code_lines.append(f"        elem{i}.clear()")
+                
+                code_lines.append(f"        elem{i}.send_keys('{text}')")
+                
+                if press_enter:
+                    code_lines.append(f"        elem{i}.send_keys('\\n')")
+            else:
+                code_lines.append(f"        # Note: TYPE_TEXT requires element locator")
+        
+        elif action_type == 'wait_visible' or action_type == 'wait_clickable':
+            element = action.get('element', {})
+            selector = element.get('selector', {})
+            timeout_sec = action.get('timeoutSec', 10)
+            
+            if selector and selector.get('value'):
+                strategy = selector.get('strategy', 'xpath')
+                value = selector.get('value', '')
+                
+                code_lines.append(f"        # Wait for element to be {action_type.split('_')[1]}")
+                code_lines.append(f"        from selenium.webdriver.support.ui import WebDriverWait")
+                code_lines.append(f"        from selenium.webdriver.support import expected_conditions as EC")
+                
+                if action_type == 'wait_visible':
+                    if strategy == 'id':
+                        code_lines.append(f"        WebDriverWait(driver, {timeout_sec}).until(EC.visibility_of_element_located((AppiumBy.ID, '{value}')))")
+                    else:
+                        code_lines.append(f"        WebDriverWait(driver, {timeout_sec}).until(EC.visibility_of_element_located((AppiumBy.XPATH, '{value}')))")
+                else:  # wait_clickable
+                    if strategy == 'id':
+                        code_lines.append(f"        WebDriverWait(driver, {timeout_sec}).until(EC.element_to_be_clickable((AppiumBy.ID, '{value}')))")
+                    else:
+                        code_lines.append(f"        WebDriverWait(driver, {timeout_sec}).until(EC.element_to_be_clickable((AppiumBy.XPATH, '{value}')))")
+        
+        elif action_type == 'assert_visible' or action_type == 'assert_text':
+            element = action.get('element', {})
+            selector = element.get('selector', {})
+            expected_text = action.get('expectedText', '')
+            timeout_sec = action.get('timeoutSec', 10)
+            
+            if selector and selector.get('value'):
+                strategy = selector.get('strategy', 'xpath')
+                value = selector.get('value', '')
+                
+                code_lines.append(f"        # Assert {action_type.split('_')[1]}")
+                
+                if action_type == 'assert_visible':
+                    code_lines.append(f"        from selenium.webdriver.support.ui import WebDriverWait")
+                    code_lines.append(f"        from selenium.webdriver.support import expected_conditions as EC")
+                    
+                    if strategy == 'id':
+                        code_lines.append(f"        WebDriverWait(driver, {timeout_sec}).until(EC.visibility_of_element_located((AppiumBy.ID, '{value}')))")
+                    else:
+                        code_lines.append(f"        WebDriverWait(driver, {timeout_sec}).until(EC.visibility_of_element_located((AppiumBy.XPATH, '{value}')))")
+                else:  # assert_text
+                    if strategy == 'id':
+                        code_lines.append(f"        actual_text{i} = driver.find_element(AppiumBy.ID, '{value}').text")
+                    else:
+                        code_lines.append(f"        actual_text{i} = driver.find_element(AppiumBy.XPATH, '{value}').text")
+                    
+                    code_lines.append(f"        if actual_text{i} != '{expected_text}':")
+                    code_lines.append(f"            raise AssertionError(f\"Expected '{expected_text}' but got '{{actual_text{i}}}'\")")
         
         code_lines.append("")
     

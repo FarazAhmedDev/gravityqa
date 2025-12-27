@@ -1,0 +1,168 @@
+// REPLACE lines 1782-1841 (actions.map section) WITH THIS:
+
+                                {actions.map((action, idx) => {
+                                    const enabled = action.enabled ?? true
+                                    
+                                    return (
+                                        <React.Fragment key={action.step}>
+                                            {/* Add Wait Button */}
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                margin: '4px 0'
+                                            }}>
+                                                <button
+                                                    onClick={() => handleOpenWaitModal(idx)}
+                                                    style={{
+                                                        padding: '6px 16px',
+                                                        background: 'linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(88, 166, 255, 0.05))',
+                                                        border: '1px dashed rgba(88, 166, 255, 0.3)',
+                                                        borderRadius: '8px',
+                                                        color: '#58a6ff',
+                                                        fontSize: '11px',
+                                                        cursor: 'pointer',
+                                                        fontWeight: 600,
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(88, 166, 255, 0.1))'
+                                                        e.currentTarget.style.borderColor = '#58a6ff'
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(88, 166, 255, 0.05))'
+                                                        e.currentTarget.style.borderColor = 'rgba(88, 166, 255, 0.3)'
+                                                    }}
+                                                >
+                                                    <span style={{ fontSize: '14px' }}>+</span> Add Wait
+                                                </button>
+                                            </div>
+
+                                            {/* Action Card */}
+                                            <div
+                                                style={{
+                                                    padding: '16px',
+                                                    background: enabled
+                                                        ? 'linear-gradient(135deg, #0d1117 0%, #161b22 100%)'
+                                                        : 'linear-gradient(135deg, #161b22 0%, rgba(110, 118, 129, 0.1) 100%)',
+                                                    borderRadius: '12px',
+                                                    border: enabled ? '1px solid #21262d' : '1px solid rgba(110, 118, 129, 0.3)',
+                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                                    transition: 'all 0.2s',
+                                                    opacity: enabled ? 1 : 0.6
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (enabled) {
+                                                        e.currentTarget.style.transform = 'translateX(-4px)'
+                                                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(88, 166, 255, 0.1) 0%, rgba(46, 160, 67, 0.05) 100%)'
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.transform = 'translateX(0)'
+                                                    e.currentTarget.style.background = enabled
+                                                        ? 'linear-gradient(135deg, #0d1117 0%, #161b22 100%)'
+                                                        : 'linear-gradient(135deg, #161b22 0%, rgba(110, 118, 129, 0.1) 100%)'
+                                                }}
+                                            >
+                                                {/* Header */}
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    marginBottom: '8px',
+                                                    justifyContent: 'space-between'
+                                                }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <div style={{
+                                                            fontSize: '11px',
+                                                            padding: '4px 8px',
+                                                            background: action.action === 'tap'
+                                                                ? (enabled ? 'rgba(46, 160, 67, 0.2)' : 'rgba(110, 118, 129, 0.2)')
+                                                                : (enabled ? 'rgba(88, 166, 255, 0.2)' : 'rgba(110, 118, 129, 0.2)'),
+                                                            color: enabled
+                                                                ? (action.action === 'tap' ? '#3fb950' : '#58a6ff')
+                                                                : '#6e7681',
+                                                            borderRadius: '6px',
+                                                            fontWeight: 700,
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.5px'
+                                                        }}>
+                                                            Step {action.step}
+                                                        </div>
+                                                        <div style={{
+                                                            fontSize: '14px',
+                                                            fontWeight: 600,
+                                                            color: enabled ? '#e6edf3' : '#6e7681'
+                                                        }}>
+                                                            {action.action === 'tap' ? '👆' : action.action === 'wait' ? '⏱️' : '👉'} {action.action.toUpperCase()}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Status Badge */}
+                                                    <div style={{
+                                                        fontSize: '10px',
+                                                        padding: '3px 8px',
+                                                        background: enabled ? 'rgba(46, 160, 67, 0.15)' : 'rgba(110, 118, 129, 0.15)',
+                                                        color: enabled ? '#3fb950' : '#6e7681',
+                                                        borderRadius: '6px',
+                                                        fontWeight: 600
+                                                    }}>
+                                                        {enabled ? '✓ Active' : '✗ Disabled'}
+                                                    </div>
+                                                </div>
+
+                                                {/* Description */}
+                                                <div style={{
+                                                    fontSize: '12px',
+                                                    color: enabled ? '#8b949e' : '#6e7681',
+                                                    fontFamily: 'monospace',
+                                                    marginBottom: '12px'
+                                                }}>
+                                                    {action.description}
+                                                </div>
+
+                                                {/* Control Buttons */}
+                                                <div style={{
+                                                    display: 'flex',
+                                                    gap: '6px',
+                                                    flexWrap: 'wrap'
+                                                }}>
+                                                    {/* Toggle */}
+                                                    <button
+                                                        onClick={() => handleToggleStep(idx)}
+                                                        style={{
+                                                            padding: '6px 12px',
+                                                            background: enabled
+                                                                ? 'linear-gradient(135deg, #f85149, #da3633)'
+                                                                : 'linear-gradient(135deg, #2ea043, #238636)',
+                                                            border: 'none',
+                                                            borderRadius: '6px',
+                                                            color: '#fff',
+                                                            fontSize: '11px',
+                                                            cursor: 'pointer',
+                                                            fontWeight: 600
+                                                        }}
+                                                    >
+                                                        {enabled ? '❌ Disable' : '✅ Enable'}
+                                                    </button>
+
+                                                    {/* Delete */}
+                                                    <button
+                                                        onClick={() => handleDeleteStep(idx)}
+                                                        style={{
+                                                            padding: '6px 12px',
+                                                            background: 'linear-gradient(135deg, rgba(248, 81, 73, 0.1), rgba(218, 54, 51, 0.05))',
+                                                            border: '1px solid rgba(248, 81, 73, 0.3)',
+                                                            borderRadius: '6px',
+                                                            color: '#f85149',
+                                                            fontSize: '11px',
+                                                            cursor: 'pointer',
+                                                            fontWeight: 600
+                                                        }}
+                                                    >
+                                                        🗑️ Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </React.Fragment>
+                                    )
+                                })}

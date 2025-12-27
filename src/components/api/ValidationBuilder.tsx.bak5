@@ -1,0 +1,279 @@
+import { swaggerTheme } from './swagger/swaggerTheme'
+
+interface Validation {
+    id: string
+    type: 'status' | 'time' | 'json_path' | 'header'
+    field?: string
+    operator: '==' | '!=' | '<' | '>' | '<=' | '>=' | 'contains' | 'exists'
+    value: any
+}
+
+interface Props {
+    validations: Validation[]
+    onChange: (validations: Validation[]) => void
+}
+
+export default function ValidationBuilder({ validations, onChange }: Props) {
+
+    const addValidation = () => {
+        const newValidation: Validation = {
+            id: Date.now().toString(),
+            type: 'status',
+            operator: '==',
+            value: 200
+        }
+        onChange([...validations, newValidation])
+    }
+
+    const updateValidation = (id: string, updates: Partial<Validation>) => {
+        onChange(validations.map(v => v.id === id ? { ...v, ...updates } : v))
+    }
+
+    const deleteValidation = (id: string) => {
+        onChange(validations.filter(v => v.id !== id))
+    }
+
+    const validationTypes = [
+        { value: 'status', label: 'Status Code', icon: '✓' },
+        { value: 'time', label: 'Response Time', icon: '⏱️' },
+        { value: 'json_path', label: 'JSON Path', icon: '🔍' },
+        { value: 'header', label: 'Header', icon: '📋' }
+    ]
+
+    const operators: Record<string, string[]> = {
+        status: ['==', '!=', '<', '>', '<=', '>='],
+        time: ['<', '>', '<=', '>='],
+        json_path: ['==', '!=', 'contains', 'exists'],
+        header: ['==', '!=', 'contains', 'exists']
+    }
+
+    return (
+        <div style={{
+            padding: '20px',
+            background: colors.bgSecondary,
+            borderRadius: '12px',
+            border: `1px solid ${colors.border}`
+        }}>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '20px'
+            }}>
+                <div>
+                    <div style={{
+                        fontSize: '16px',
+                        fontWeight: '700',
+                        color: colors.text,
+                        marginBottom: '4px'
+                    }}>
+                        ✅ Validations
+                    </div>
+                    <div style={{
+                        fontSize: '13px',
+                        color: colors.textSecondary
+                    }}>
+                        Add assertions to verify API responses
+                    </div>
+                </div>
+                <button
+                    onClick={addValidation}
+                    style={{
+                        padding: '10px 16px',
+                        background: `linear-gradient(135deg, ${colors.primary}, ${colors.primary}dd)`,
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: 'white',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        boxShadow: `0 4px 12px ${colors.primary}40`,
+                        transition: 'transform 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                    + Add Rule
+                </button>
+            </div>
+
+            {validations.length === 0 ? (
+                <div style={{
+                    padding: '40px',
+                    textAlign: 'center',
+                    color: colors.textSecondary,
+                    background: colors.bgTertiary,
+                    borderRadius: '10px',
+                    border: `2px dashed ${colors.border}`
+                }}>
+                    <div style={{ fontSize: '48px', marginBottom: '12px', opacity: 0.3 }}>✓</div>
+                    <div style={{ fontSize: '14px' }}>No validations added</div>
+                    <div style={{ fontSize: '12px', marginTop: '8px', opacity: 0.7 }}>
+                        Click "Add Rule" to create your first validation
+                    </div>
+                </div>
+            ) : (
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px'
+                }}>
+                    {validations.map((validation) => (
+                        <div key={validation.id} style={{
+                            padding: '16px',
+                            background: colors.bgTertiary,
+                            borderRadius: '10px',
+                            border: `1px solid ${colors.border}`
+                        }}>
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr 1fr auto',
+                                gap: '12px',
+                                alignItems: 'center'
+                            }}>
+                                {/* Type */}
+                                <select
+                                    value={validation.type}
+                                    onChange={(e) => updateValidation(validation.id, {
+                                        type: e.target.value as any,
+                                        operator: '==',
+                                        value: e.target.value === 'status' ? 200 : e.target.value === 'time' ? 1000 : '',
+                                        field: undefined
+                                    })}
+                                    style={{
+                                        padding: '10px 12px',
+                                        background: colors.bg,
+                                        border: `1px solid ${colors.border}`,
+                                        borderRadius: '6px',
+                                        color: colors.text,
+                                        fontSize: '13px',
+                                        fontWeight: '600',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {validationTypes.map(type => (
+                                        <option key={type.value} value={type.value}>
+                                            {type.icon} {type.label}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {/* Operator */}
+                                <select
+                                    value={validation.operator}
+                                    onChange={(e) => updateValidation(validation.id, { operator: e.target.value as any })}
+                                    style={{
+                                        padding: '10px 12px',
+                                        background: colors.bg,
+                                        border: `1px solid ${colors.border}`,
+                                        borderRadius: '6px',
+                                        color: colors.text,
+                                        fontSize: '13px',
+                                        fontFamily: 'monospace',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {operators[validation.type].map(op => (
+                                        <option key={op} value={op}>{op}</option>
+                                    ))}
+                                </select>
+
+                                {/* Value/Field */}
+                                <div>
+                                    {(validation.type === 'json_path' || validation.type === 'header') && (
+                                        <input
+                                            type="text"
+                                            value={validation.field || ''}
+                                            onChange={(e) => updateValidation(validation.id, { field: e.target.value })}
+                                            placeholder={validation.type === 'json_path' ? 'data.id' : 'content-type'}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px 12px',
+                                                background: colors.bg,
+                                                border: `1px solid ${colors.border}`,
+                                                borderRadius: '6px',
+                                                color: colors.text,
+                                                fontSize: '13px',
+                                                fontFamily: 'monospace',
+                                                marginBottom: '8px'
+                                            }}
+                                        />
+                                    )}
+
+                                    {validation.operator !== 'exists' && (
+                                        <input
+                                            type={validation.type === 'time' || validation.type === 'status' ? 'number' : 'text'}
+                                            value={validation.value}
+                                            onChange={(e) => updateValidation(validation.id, {
+                                                value: validation.type === 'time' || validation.type === 'status'
+                                                    ? Number(e.target.value)
+                                                    : e.target.value
+                                            })}
+                                            placeholder={
+                                                validation.type === 'status' ? '200' :
+                                                    validation.type === 'time' ? '1000' :
+                                                        'expected value'
+                                            }
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px 12px',
+                                                background: colors.bg,
+                                                border: `1px solid ${colors.border}`,
+                                                borderRadius: '6px',
+                                                color: colors.text,
+                                                fontSize: '13px',
+                                                fontFamily: 'monospace'
+                                            }}
+                                        />
+                                    )}
+                                </div>
+
+                                {/* Delete */}
+                                <button
+                                    onClick={() => deleteValidation(validation.id)}
+                                    style={{
+                                        padding: '10px 12px',
+                                        background: colors.error + '20',
+                                        border: `1px solid ${colors.error}`,
+                                        borderRadius: '6px',
+                                        color: colors.error,
+                                        cursor: 'pointer',
+                                        fontSize: '16px',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = colors.error
+                                        e.currentTarget.style.color = 'white'
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = colors.error + '20'
+                                        e.currentTarget.style.color = colors.error
+                                    }}
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+
+                            {/* Description */}
+                            <div style={{
+                                marginTop: '12px',
+                                padding: '8px 12px',
+                                background: colors.bg,
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                color: colors.textSecondary,
+                                fontFamily: 'monospace'
+                            }}>
+                                {validation.type === 'status' && `Assert that status code ${validation.operator} ${validation.value}`}
+                                {validation.type === 'time' && `Assert that response time ${validation.operator} ${validation.value}ms`}
+                                {validation.type === 'json_path' && validation.operator === 'exists' && `Assert that ${validation.field} exists in response`}
+                                {validation.type === 'json_path' && validation.operator !== 'exists' && `Assert that ${validation.field} ${validation.operator} ${validation.value}`}
+                                {validation.type === 'header' && `Assert that header ${validation.field} ${validation.operator} ${validation.value}`}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}

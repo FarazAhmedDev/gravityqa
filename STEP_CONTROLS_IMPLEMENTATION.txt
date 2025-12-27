@@ -1,0 +1,338 @@
+// ✅ STEP 1: Add these state variables after line 89 (after showElementPanel)
+
+    // Step control states  
+    const [editingStepIndex, setEditingStepIndex] = useState<number | null>(null)
+    const [showWaitModal, setShowWaitModal] = useState(false)
+    const [waitInsertPosition, setWaitInsertPosition] = useState<number>(0)
+
+// ✅ STEP 2: Add these handler functions after the inspector handlers (around line 450)
+
+    // Handle toggle step enable/disable
+    const handleToggleStep = (index: number) => {
+        const newActions = [...actions]
+        newActions[index].enabled = !newActions[index].enabled
+        setActions(newActions)
+    }
+
+    // Handle delete step
+    const handleDeleteStep = (index: number) => {
+        const newActions = actions.filter((_, i) => i !== index)
+        // Renumber steps
+        newActions.forEach((action, i) => {
+            action.step = i + 1
+        })
+        setActions(newActions)
+    }
+
+    // Handle open wait modal
+    const handleOpenWaitModal = (position: number) => {
+        setWaitInsertPosition(position)
+        setShowWaitModal(true)
+    }
+
+    // Handle add wait step
+    const handleAddWait = (duration: number) => {
+        const newWaitAction: RecordedAction = {
+            step: waitInsertPosition + 1,
+            action: 'wait',
+            duration,
+            description: `⏱️ Wait ${duration}s`,
+            timestamp: Date.now(),
+            enabled: true
+        }
+        
+        const newActions = [...actions]
+        newActions.splice(waitInsertPosition, 0, newWaitAction)
+        
+        // Renumber steps
+        newActions.forEach((action, i) => {
+            action.step = i + 1
+        })
+        
+        setActions(newActions)
+        setShowWaitModal(false)
+    }
+
+// ✅ STEP 3: Update RecordedAction interface at the top (around line 19)
+
+interface RecordedAction {
+    step: number
+    action: string
+    x?: number
+    y?: number
+    text?: string
+    duration?: number
+    element?: any
+    description: string
+    timestamp: number
+    enabled?: boolean      // NEW
+    retryCount?: number    // NEW
+    waitBefore?: number    // NEW
+    waitAfter?: number     // NEW
+}
+
+// ✅ STEP 4: Replace actions.map section (lines 1737-1796) with this COMPLETE code:
+
+                                {actions.map((action, idx) => {
+                                    const enabled = action.enabled ?? true
+                                    
+                                    return (
+                                        <React.Fragment key={action.step}>
+                                            {/* Add Wait Button */}
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                margin: '4px 0'
+                                            }}>
+                                                <button
+                                                    onClick={() => handleOpenWaitModal(idx)}
+                                                    style={{
+                                                        padding: '6px 16px',
+                                                        background: 'linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(88, 166, 255, 0.05))',
+                                                        border: '1px dashed rgba(88, 166, 255, 0.3)',
+                                                        borderRadius: '8px',
+                                                        color: '#58a6ff',
+                                                        fontSize: '11px',
+                                                        cursor: 'pointer',
+                                                        fontWeight: 600,
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(88, 166, 255, 0.1))'
+                                                        e.currentTarget.style.borderColor = '#58a6ff'
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(88, 166, 255, 0.05))'
+                                                        e.currentTarget.style.borderColor = 'rgba(88, 166, 255, 0.3)'
+                                                    }}
+                                                >
+                                                    <span style={{ fontSize: '14px' }}>+</span> Add Wait
+                                                </button>
+                                            </div>
+
+                                            {/* Action Card */}
+                                            <div
+                                                style={{
+                                                    padding: '16px',
+                                                    background: enabled
+                                                        ? 'linear-gradient(135deg, #0d1117 0%, #161b22 100%)'
+                                                        : 'linear-gradient(135deg, #161b22 0%, rgba(110, 118, 129, 0.1) 100%)',
+                                                    borderRadius: '12px',
+                                                    border: enabled ? '1px solid #21262d' : '1px solid rgba(110, 118, 129, 0.3)',
+                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                                                    transition: 'all 0.2s',
+                                                    opacity: enabled ? 1 : 0.6
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (enabled) {
+                                                        e.currentTarget.style.transform = 'translateX(-4px)'
+                                                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(88, 166, 255, 0.1) 0%, rgba(46, 160, 67, 0.05) 100%)'
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTargetStyle.transform = 'translateX(0)'
+                                                    e.currentTarget.style.background = enabled
+                                                        ? 'linear-gradient(135deg, #0d1117 0%, #161b22 100%)'
+                                                        : 'linear-gradient(135deg, #161b22 0%, rgba(110, 118, 129, 0.1) 100%)'
+                                                }}
+                                            >
+                                                {/* Header */}
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    marginBottom: '8px',
+                                                    justifyContent: 'space-between'
+                                                }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <div style={{
+                                                            fontSize: '11px',
+                                                            padding: '4px 8px',
+                                                            background: action.action === 'tap'
+                                                                ? (enabled ? 'rgba(46, 160, 67, 0.2)' : 'rgba(110, 118, 129, 0.2)')
+                                                                : (enabled ? 'rgba(88, 166, 255, 0.2)' : 'rgba(110, 118, 129, 0.2)'),
+                                                            color: enabled
+                                                                ? (action.action === 'tap' ? '#3fb950' : '#58a6ff')
+                                                                : '#6e7681',
+                                                            borderRadius: '6px',
+                                                            fontWeight: 700,
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.5px'
+                                                        }}>
+                                                            Step {action.step}
+                                                        </div>
+                                                        <div style={{
+                                                            fontSize: '14px',
+                                                            fontWeight: 600,
+                                                            color: enabled ? '#e6edf3' : '#6e7681'
+                                                        }}>
+                                                            {action.action === 'tap' ? '👆' : action.action === 'wait' ? '⏱️' : '👉'} {action.action.toUpperCase()}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Status Badge */}
+                                                    <div style={{
+                                                        fontSize: '10px',
+                                                        padding: '3px 8px',
+                                                        background: enabled ? 'rgba(46, 160, 67, 0.15)' : 'rgba(110, 118, 129, 0.15)',
+                                                        color: enabled ? '#3fb950' : '#6e7681',
+                                                        borderRadius: '6px',
+                                                        fontWeight: 600
+                                                    }}>
+                                                        {enabled ? '✓ Active' : '✗ Disabled'}
+                                                    </div>
+                                                </div>
+
+                                                {/* Description */}
+                                                <div style={{
+                                                    fontSize: '12px',
+                                                    color: enabled ? '#8b949e' : '#6e7681',
+                                                    fontFamily: 'monospace',
+                                                    marginBottom: '12px'
+                                                }}>
+                                                    {action.description}
+                                                </div>
+
+                                                {/* Control Buttons */}
+                                                <div style={{
+                                                    display: 'flex',
+                                                    gap: '6px',
+                                                    flexWrap: 'wrap'
+                                                }}>
+                                                    {/* Toggle Enable/Disable */}
+                                                    <button
+                                                        onClick={() => handleToggleStep(idx)}
+                                                        style={{
+                                                            padding: '6px 12px',
+                                                            background: enabled
+                                                                ? 'linear-gradient(135deg, #f85149, #da3633)'
+                                                                : 'linear-gradient(135deg, #2ea043, #238636)',
+                                                            border: 'none',
+                                                            borderRadius: '6px',
+                                                            color: '#fff',
+                                                            fontSize: '11px',
+                                                            cursor: 'pointer',
+                                                            fontWeight: 600,
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        {enabled ? '❌ Disable' : '✅ Enable'}
+                                                    </button>
+
+                                                    {/* Delete */}
+                                                    <button
+                                                        onClick={() => handleDeleteStep(idx)}
+                                                        style={{
+                                                            padding: '6px 12px',
+                                                            background: 'linear-gradient(135deg, rgba(248, 81, 73, 0.1), rgba(218, 54, 51, 0.05))',
+                                                            border: '1px solid rgba(248, 81, 73, 0.3)',
+                                                            borderRadius: '6px',
+                                                            color: '#f85149',
+                                                            fontSize: '11px',
+                                                            cursor: 'pointer',
+                                                            fontWeight: 600,
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        🗑️ Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </React.Fragment>
+                                    )
+                                })}
+
+// ✅ STEP 5: Add Wait Modal before the closing div of the recording section (around line 1800)
+
+                        {/* Wait Modal */}
+                        {showWaitModal && (
+                            <div style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                background: 'rgba(0, 0, 0, 0.8)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                zIndex: 10000
+                            }}
+                            onClick={() => setShowWaitModal(false)}
+                            >
+                                <div
+                                    style={{
+                                        background: 'linear-gradient(135deg, #161b22, #0d1117)',
+                                        padding: '32px',
+                                        borderRadius: '16px',
+                                        border: '2px solid #30a9de',
+                                        boxShadow: '0 20px 60px rgba(48, 169, 222, 0.4)',
+                                        minWidth: '400px'
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <h3 style={{ margin: '0 0 24px 0', color: '#e6edf3', fontSize: '20px' }}>
+                                        ⏱️ Insert Wait Step
+                                    </h3>
+                                    
+                                    <div style={{ marginBottom: '24px' }}>
+                                        <label style={{ display: 'block', marginBottom: '8px', color: '#8b949e', fontSize: '13px' }}>
+                                            Duration (seconds)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="wait-duration"
+                                            defaultValue="2"
+                                            min="1"
+                                            max="60"
+                                            style={{
+                                                width: '100%',
+                                                padding: '12px',
+                                                background: '#0d1117',
+                                                border: '1px solid #30363d',
+                                                borderRadius: '8px',
+                                                color: '#e6edf3',
+                                                fontSize: '16px'
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                        <button
+                                            onClick={() => setShowWaitModal(false)}
+                                            style={{
+                                                flex: 1,
+                                                padding: '12px',
+                                                background: 'rgba(110, 118, 129, 0.1)',
+                                                border: '1px solid #30363d',
+                                                borderRadius: '8px',
+                                                color: '#8b949e',
+                                                cursor: 'pointer',
+                                                fontWeight: 600
+                                            }}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const input = document.getElementById('wait-duration') as HTMLInputElement
+                                                const duration = parseInt(input.value) || 2
+                                                handleAddWait(duration)
+                                            }}
+                                            style={{
+                                                flex: 1,
+                                                padding: '12px',
+                                                background: 'linear-gradient(135deg, #2ea043, #238636)',
+                                                border: 'none',
+                                                borderRadius: '8px',
+                                                color: '#fff',
+                                                cursor: 'pointer',
+                                                fontWeight: 600
+                                            }}
+                                        >
+                                            ✓ Add Wait
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
-from api import projects, tests, devices, ai, websocket, inspector, realtime, flows, playback, appium_server, installed_apps, check_apk, element_inspector, codegen, code_editor, web_automation
+from api import projects, tests, devices, ai, websocket, inspector, realtime, flows, playback, appium_server, installed_apps, check_apk, element_inspector, codegen, code_editor, web_automation, web_routes, enhanced_actions
 from database import engine, Base
 
 # Create database tables
@@ -40,6 +40,8 @@ app.include_router(appium_server.router)
 app.include_router(installed_apps.router)
 app.include_router(check_apk.router)
 app.include_router(web_automation.router)  # Web Automation (Playwright)
+app.include_router(web_routes.router)  # Web Automation (Selenium)
+app.include_router(enhanced_actions.router)  # Enhanced Actions (Type, Wait, Assert)
 app.include_router(websocket.router, prefix="/ws", tags=["websocket"])
 
 @app.get("/")

@@ -137,15 +137,45 @@ class PlaybackEngine:
         action = step.get("action")
         
         if action == "tap":
-            x = step.get("x")
-            y = step.get("y")
+            # PHASE 1: TRY ELEMENT FIRST (Primary)
+            selector = step.get("selector")
+            
+            if selector and step.get("targetType") == "element":
+                try:
+                    print(f"[Playback]   → Trying element: {selector['strategy']} = {selector['value']}")
+                    
+                    # Use find_element helper
+                    element_found = await self._find_and_click_element(
+                        session_id, 
+                        selector["strategy"], 
+                        selector["value"]
+                    )
+                    
+                    if element_found:
+                        print(f"[Playback]   ✅ Element click successful!")
+                        return True
+                    else:
+                        print(f"[Playback]   ⚠️ Element not found, trying fallback...")
+                        
+                except Exception as e:
+                    print(f"[Playback]   ⚠️ Element click failed: {e}, trying fallback...")
+            
+            # PHASE 2: FALLBACK TO COORDINATES
+            fallback = step.get("fallback")
+            if fallback:
+                x = fallback.get("x")
+                y = fallback.get("y")
+            else:
+                # Legacy support - direct x, y
+                x = step.get("x")
+                y = step.get("y")
             
             if x is not None and y is not None:
-                print(f"[Playback]   → Tapping at ({x}, {y})")
+                print(f"[Playback]   → Fallback: Tapping at ({x}, {y})")
                 result = await self.appium_service.tap_at_coordinate(session_id, x, y)
                 return result if result is not None else True
             else:
-                print(f"[Playback]   ⚠️ Invalid tap coordinates")
+                print(f"[Playback]   ❌ No valid selector or coordinates!")
                 return False
                 
         elif action == "swipe":
@@ -184,6 +214,70 @@ class PlaybackEngine:
             
         else:
             print(f"[Playback]   ⚠️ Unknown action: {action}")
+            return False
+    
+    async def _find_and_click_element(self, session_id: str, strategy: str, value: str) -> bool:
+        """Find element by selector and click it"""
+        try:
+            import httpx
+            
+            # Map strategy to Appium locator
+            locator_map = {
+                "id": "id",  # resource-id
+                "accessibility": "accessibility id",
+                "text": "android uiautomator",  # Will use UiSelector
+                "xpath": "xpath"
+            }
+            
+            using = locator_map.get(strategy)
+            if not using:
+                print(f"[Playback] ❌ Unknown selector strategy: {strategy}")
+                return False
+            
+            # For text strategy, wrap in UiSelector
+            if strategy == "text":
+                selector_value = f'new UiSelector().text("{value}")'
+            else:
+                selector_value = value
+            
+            async with httpx.AsyncClient() as client:
+                # Find element
+                find_response = await client.post(
+                    f"http://{self.appium_service.host}:{self.appium_service.port}/session/{session_id}/element",
+                    json={"using": using, "value": selector_value},
+                    timeout=10
+                )
+                
+                if find_response.status_code != 200:
+                    print(f"[Playback] ❌ Element not found: {find_response.text}")
+                    return False
+                
+                element_data = find_response.json()
+                element_id = element_data.get("value", {}).get("ELEMENT") or element_data.get("value", {}).get("element-6066-11e4-a52e-4f735466cecf")
+                
+                if not element_id:
+                    print(f"[Playback] ❌ Could not extract element ID")
+                    return False
+                
+                print(f"[Playback] ✅ Element found: {element_id}")
+                
+                # Click element
+                click_response = await client.post(
+                    f"http://{self.appium_service.host}:{self.appium_service.port}/session/{session_id}/element/{element_id}/click",
+                    timeout=10
+                )
+                
+                if click_response.status_code == 200:
+                    print(f"[Playback] ✅ Element clicked successfully")
+                    return True
+                else:
+                    print(f"[Playback] ❌ Click failed: {click_response.text}")
+                    return False
+                    
+        except Exception as e:
+            print(f"[Playback] ❌ Element interaction error: {e}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def stop_playback(self):

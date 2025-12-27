@@ -1,6 +1,6 @@
 interface WebAction {
     id: number
-    type: 'click' | 'type' | 'scroll'
+    type: 'click' | 'type' | 'scroll' | 'wait'
     selector?: string
     data?: any
     timestamp: string
@@ -21,14 +21,16 @@ export default function ActionsList({ actions, isRecording }: ActionsListProps) 
         primary: '#f97316',
         blue: '#58a6ff',
         purple: '#a78bfa',
-        success: '#3fb950'
+        success: '#3fb950',
+        cyan: '#56d4dd'
     }
 
     const getActionIcon = (type: string) => {
         switch (type) {
-            case 'click': return '🖱️'
+            case 'click': return '👆'
             case 'type': return '⌨️'
             case 'scroll': return '📜'
+            case 'wait': return '⏱️'
             default: return '●'
         }
     }
@@ -38,6 +40,7 @@ export default function ActionsList({ actions, isRecording }: ActionsListProps) 
             case 'click': return colors.blue
             case 'type': return colors.purple
             case 'scroll': return colors.success
+            case 'wait': return colors.cyan
             default: return colors.primary
         }
     }
@@ -45,13 +48,36 @@ export default function ActionsList({ actions, isRecording }: ActionsListProps) 
     const getActionDescription = (action: WebAction) => {
         switch (action.type) {
             case 'click':
-                return `Click "${action.selector}"`
+                if (action.selector && !action.selector.startsWith('coordinate:')) {
+                    return {
+                        title: 'Click Element',
+                        details: action.selector.split('>').pop()?.trim() || action.selector
+                    }
+                }
+                return {
+                    title: 'Tap',
+                    details: `Tap at (${action.data?.x || 0}, ${action.data?.y || 0})`
+                }
             case 'type':
-                return `Type "${action.data?.text}" into "${action.selector}"`
+                return {
+                    title: 'Type Text',
+                    details: `"${action.data?.text}" into ${action.selector?.split('>').pop()?.trim() || 'element'}`
+                }
             case 'scroll':
-                return `Scroll ${action.data?.direction} ${action.data?.amount}px`
+                return {
+                    title: 'Scroll',
+                    details: `${action.data?.direction} ${action.data?.amount}px`
+                }
+            case 'wait':
+                return {
+                    title: 'Wait',
+                    details: `${action.data?.seconds || 0}s delay`
+                }
             default:
-                return action.type
+                return {
+                    title: action.type,
+                    details: 'Unknown action'
+                }
         }
     }
 
@@ -94,7 +120,7 @@ export default function ActionsList({ actions, isRecording }: ActionsListProps) 
                         fontSize: '20px',
                         boxShadow: `0 0 20px ${colors.primary}40`
                     }}>
-                        📝
+                        📋
                     </div>
                     <h3 style={{
                         margin: 0,
@@ -104,7 +130,7 @@ export default function ActionsList({ actions, isRecording }: ActionsListProps) 
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent'
                     }}>
-                        Actions
+                        Recorded Actions
                     </h3>
                 </div>
                 <div style={{
@@ -120,7 +146,7 @@ export default function ActionsList({ actions, isRecording }: ActionsListProps) 
                     boxShadow: isRecording ? `0 0 15px #f8514940` : 'none',
                     animation: isRecording ? 'countPulse 2s ease-in-out infinite' : 'none'
                 }}>
-                    {actions.length} {actions.length === 1 ? 'action' : 'actions'}
+                    ({actions.length})
                 </div>
             </div>
 
@@ -191,6 +217,7 @@ export default function ActionsList({ actions, isRecording }: ActionsListProps) 
                 ) : (
                     actions.map((action, index) => {
                         const actionColor = getActionColor(action.type)
+                        const description = getActionDescription(action)
                         return (
                             <div
                                 key={action.id}
@@ -198,10 +225,10 @@ export default function ActionsList({ actions, isRecording }: ActionsListProps) 
                                     background: `linear-gradient(135deg, ${colors.bgTertiary}, ${colors.bgSecondary})`,
                                     border: `1px solid ${colors.border}`,
                                     borderRadius: '12px',
-                                    padding: '14px',
+                                    padding: '16px',
                                     display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '14px',
+                                    flexDirection: 'column',
+                                    gap: '8px',
                                     transition: 'all 0.3s ease',
                                     cursor: 'default',
                                     animation: `slideInAction 0.4s ease-out ${index * 0.05}s backwards`,
@@ -220,66 +247,57 @@ export default function ActionsList({ actions, isRecording }: ActionsListProps) 
                                     e.currentTarget.style.transform = 'translateX(0)'
                                 }}
                             >
+                                {/* Step Header */}
                                 <div style={{
-                                    minWidth: '32px',
-                                    height: '32px',
-                                    borderRadius: '8px',
-                                    background: `linear-gradient(135deg, ${actionColor}25, ${actionColor}15)`,
-                                    border: `2px solid ${actionColor}40`,
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '11px',
-                                    fontWeight: 800,
-                                    color: actionColor,
-                                    boxShadow: `0 0 15px ${actionColor}30`
+                                    gap: '12px'
                                 }}>
-                                    {index + 1}
-                                </div>
-
-                                <div style={{
-                                    fontSize: '22px',
-                                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-                                }}>
-                                    {getActionIcon(action.type)}
-                                </div>
-
-                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{
+                                        padding: '4px 10px',
+                                        background: `${actionColor}20`,
+                                        border: `1px solid ${actionColor}40`,
+                                        borderRadius: '6px',
+                                        fontSize: '11px',
+                                        fontWeight: 800,
+                                        color: actionColor
+                                    }}>
+                                        STEP {index + 1}
+                                    </div>
+                                    <div style={{ fontSize: '20px' }}>
+                                        {getActionIcon(action.type)}
+                                    </div>
                                     <div style={{
                                         fontSize: '13px',
-                                        fontWeight: 600,
-                                        color: colors.text,
-                                        marginBottom: '4px',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap'
+                                        fontWeight: 700,
+                                        color: actionColor,
+                                        textTransform: 'uppercase'
                                     }}>
-                                        {getActionDescription(action)}
-                                    </div>
-                                    <div style={{
-                                        fontSize: '11px',
-                                        color: colors.textSecondary,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px'
-                                    }}>
-                                        <span>⏱️</span>
-                                        {new Date(action.timestamp).toLocaleTimeString()}
+                                        {description.title}
                                     </div>
                                 </div>
 
-                                {/* Action type badge */}
+                                {/* Step Details */}
                                 <div style={{
-                                    padding: '4px 10px',
-                                    background: `${actionColor}15`,
-                                    border: `1px solid ${actionColor}30`,
-                                    borderRadius: '6px',
-                                    fontSize: '10px',
-                                    fontWeight: 700,
-                                    color: actionColor,
-                                    textTransform: 'uppercase'
+                                    fontSize: '13px',
+                                    color: colors.text,
+                                    paddingLeft: '12px',
+                                    borderLeft: `2px solid ${actionColor}30`
                                 }}>
-                                    {action.type}
+                                    {description.details}
+                                </div>
+
+                                {/* Timestamp */}
+                                <div style={{
+                                    fontSize: '11px',
+                                    color: colors.textSecondary,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    marginTop: '4px'
+                                }}>
+                                    <span>⏱️</span>
+                                    {new Date(action.timestamp).toLocaleTimeString()}
                                 </div>
                             </div>
                         )

@@ -2,7 +2,9 @@ import { app, BrowserWindow } from 'electron'
 import path from 'path'
 import { spawn, ChildProcess } from 'child_process'
 
-const isDev = process.env.NODE_ENV === 'development'
+// Always use dev mode when running via npm run dev
+const isDev = !app.isPackaged
+
 
 let mainWindow: BrowserWindow | null = null
 let backendProcess: ChildProcess | null = null
